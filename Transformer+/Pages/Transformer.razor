@@ -1,0 +1,39 @@
+﻿@page "/transformer"
+
+<PageTitle>Transformer</PageTitle>
+<RadzenStack AlignItems="AlignItems.Center">
+    <img src="/images/Transformer.png" style="width: 50%" alt="Transformer"/>
+</RadzenStack>
+
+<RadzenRow>
+    <RadzenColumn>
+        <RadzenTextArea @bind-Value=@input Cols="60" Rows="35" />
+    </RadzenColumn>
+    <RadzenColumn>
+        <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround">
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Int" Text="Int" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@StrDouble" Text="Str" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@MixDouble" Text="Mix" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+        </RadzenStack>
+        <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround">
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Entity" Text="Entity" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@StrSingle" Text="'Str'" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@MixSingle" Text="'Mix'" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+        </RadzenStack>
+        <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround">
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Snippet" Text="Snippet" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Json" Text="Json" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Conversion" Text="Converter" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+        </RadzenStack>
+        <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround">
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Schema" Text="Schema" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Fire" ButtonStyle="ButtonStyle.Danger" Style="width: 29%">
+                <RadzenIcon Icon="local_fire_department" />
+            </RadzenButton>
+            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width: 29%"/>
+        </RadzenStack>
+    </RadzenColumn>
+    <RadzenColumn>
+        <RadzenTextArea @bind-Value=@output Cols="60" Rows="35" />
+    </RadzenColumn>
+</RadzenRow>

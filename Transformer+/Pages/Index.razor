@@ -1,0 +1,19 @@
+﻿@page "/"
+
+<PageTitle>Playground</PageTitle>
+
+<h1>Playground</h1>
+
+<RadzenButton Click="@ButtonClicked" ButtonStyle="ButtonStyle.Secondary">@text<RadzenIcon Icon="local_fire_department" IconStyle="IconStyle.Danger"></RadzenIcon></RadzenButton>
+
+@code {
+
+    private string text = "Hi";
+
+    private void ButtonClicked()
+    {
+        text = text == "Bye"
+        ? "Hi"
+        : "Bye";
+    }
+}
