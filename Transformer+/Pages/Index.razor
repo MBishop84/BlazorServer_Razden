@@ -1,19 +1,38 @@
 ﻿@page "/"
+@using Newtonsoft.Json;
 
-<PageTitle>Playground</PageTitle>
+<PageTitle>Home</PageTitle>
 
-<h1>Playground</h1>
-
-<RadzenButton Click="@ButtonClicked" ButtonStyle="ButtonStyle.Secondary">@text<RadzenIcon Icon="local_fire_department" IconStyle="IconStyle.Danger"></RadzenIcon></RadzenButton>
+<RadzenStack AlignItems="AlignItems.Center">
+    <img src="/images/stoic-strategist.png" style="height: 300px" alt="stoic"/>
+    <RadzenText TextStyle="TextStyle.Subtitle1">@quote</RadzenText>
+    <RadzenText TextStyle="TextStyle.Subtitle2">-@author</RadzenText>
+    <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@GetContent" Text="Refresh Quote" ButtonStyle="ButtonStyle.Info"/>
+</RadzenStack>
 
 @code {
+    private string quote = "Loading...";
+    private string author = "Loading...";
 
-    private string text = "Hi";
-
-    private void ButtonClicked()
+    private struct Content
     {
-        text = text == "Bye"
-        ? "Hi"
-        : "Bye";
+        public string Quote { get; set; }
+        public string Author { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+        => await GetContent();
+
+    private async Task GetContent()
+    {
+        using var client = new HttpClient();
+        var response = await client.GetAsync("https://api.themotivate365.com/stoic-quote");
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            var content = JsonConvert.DeserializeObject<Content>(json);
+            this.quote = content.Quote;
+            this.author = content.Author;
+        }
     }
 }
