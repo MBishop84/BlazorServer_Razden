@@ -1,11 +1,11 @@
-using Transformer_.Data;
+using Transformer_.Data.NASA;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddScoped<NASAService>();
 
 var app = builder.Build();
 
