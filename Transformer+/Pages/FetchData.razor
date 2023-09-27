@@ -2,33 +2,40 @@
 
 <PageTitle>Weather forecast</PageTitle>
 
-@using Transformer_.Data
-@inject WeatherForecastService ForecastService
+@using Transformer_.Data.NASA
+@inject NASAService NASAService
 
-<h1>Weather forecast</h1>
+<h1>Last 100 Exoplanets Discovered.</h1>
 
-<p>This component demonstrates fetching data from a service.</p>
+<p>This component demonstrates fetching data from an api.</p>
 
 <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced"
-    AllowGrouping="true" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left"
-    Data="@forecasts" TItem="WeatherForecast" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" ShowPagingSummary="true"
+    AllowGrouping="true" AllowSorting="true" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left"
+    Data="@exoplanets" TItem="Exoplanet" LogicalFilterOperator="LogicalFilterOperator.Or" ShowPagingSummary="true"
     IsLoading=@isLoading>
     <Columns>
-        <RadzenDataGridColumn TItem="WeatherForecast" Property="Date" Title="Date" Width="160px" />
-        <RadzenDataGridColumn TItem="WeatherForecast" Property="TemperatureC" Title="TemperatureC" Width="160px" />
-        <RadzenDataGridColumn TItem="WeatherForecast" Property="TemperatureF" Title="TemperatureF" Width="160px" />
-        <RadzenDataGridColumn TItem="WeatherForecast" Property="Summary" Title="Summary" Width="160px" />
+        <RadzenDataGridColumn TItem="Exoplanet" Property="pl_name" Title="Name" Frozen="true"/>
+        <RadzenDataGridColumn TItem="Exoplanet" Property="disc_year" Title="Year" />
+        <RadzenDataGridColumn TItem="Exoplanet" Property="discoverymethod" Title="Method" />
+        <RadzenDataGridColumn TItem="Exoplanet" Property="hostname" Title="Host Star" />
+        <RadzenDataGridColumn TItem="Exoplanet" Property="disc_facility" Title="Facility" />
+        <RadzenDataGridColumn TItem="Exoplanet" Property="disc_instrument" Title="Instrument" />
+        <RadzenDataGridColumn TItem="Exoplanet" Title="Reference">
+            <Template Context="exoplanet">
+                @((MarkupString)exoplanet.pl_orbper_reflink)
+            </Template>
+        </RadzenDataGridColumn>
     </Columns>
 </RadzenDataGrid>
 
 @code {
 
-    private IEnumerable<WeatherForecast> forecasts;
+    private IEnumerable<Exoplanet> exoplanets;
 
-    private bool isLoading => forecasts == null;
+    private bool isLoading => exoplanets == null;
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await ForecastService.GetForecastAsync(DateTime.Now);
+        exoplanets = await NASAService.GetExoplanetsAsync();
     }
 }

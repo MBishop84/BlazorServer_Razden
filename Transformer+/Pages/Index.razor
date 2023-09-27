@@ -11,8 +11,8 @@
 </RadzenStack>
 
 @code {
-    private string quote = "Loading...";
-    private string author = "Loading...";
+    private string quote = "Seeking Wisdom...";
+    private string author = "...";
 
     private struct Content
     {
@@ -25,14 +25,16 @@
 
     private async Task GetContent()
     {
+        quote = "Seeking Wisdom...";
+        await Task.Delay(2000);
         using var client = new HttpClient();
         var response = await client.GetAsync("https://api.themotivate365.com/stoic-quote");
         if (response.IsSuccessStatusCode)
         {
             var json = await response.Content.ReadAsStringAsync();
             var content = JsonConvert.DeserializeObject<Content>(json);
-            this.quote = content.Quote;
-            this.author = content.Author;
+            quote = content.Quote;
+            author = content.Author;
         }
     }
 }
