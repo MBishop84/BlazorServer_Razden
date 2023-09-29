@@ -1,26 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Blazor Server w/ Radzen</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <RadzenPanelMenu DisplayStyle="MenuItemDisplayStyle.IconAndText">
+﻿<RadzenPanelMenu DisplayStyle="MenuItemDisplayStyle.IconAndText">
+    <RadzenPanelMenuItem Text="Blazor Server" Icon="alternate_email">
         <RadzenPanelMenuItem Path="" Text="Home" Icon="home" />
         <RadzenPanelMenuItem Path="transformer" Text="Transformer" Icon="precision_manufacturing" />
         <RadzenPanelMenuItem Path="fetchdata" Text="Exoplanets" Icon="language" />
-    </RadzenPanelMenu>
-</div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
+        <RadzenPanelMenuItem Path="https://blazor.radzen.com/get-started" Text="Radzen" Icon="grass" target="_blank"/>
+    </RadzenPanelMenuItem>
+</RadzenPanelMenu>

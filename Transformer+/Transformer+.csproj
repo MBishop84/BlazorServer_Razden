@@ -5,10 +5,19 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Transformer_</RootNamespace>
+    <ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
+    <PackageIcon>Autobots.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Remove="wwwroot\images\Transformer.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\images\Autobots.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

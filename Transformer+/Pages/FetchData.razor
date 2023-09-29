@@ -7,9 +7,7 @@
 
 <h1>Last 100 Exoplanets Discovered.</h1>
 
-<p>This component demonstrates fetching data from an api.</p>
-
-<RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced"
+<RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="true" FilterMode="FilterMode.Advanced"
     AllowGrouping="true" AllowSorting="true" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left"
     Data="@exoplanets" TItem="Exoplanet" LogicalFilterOperator="LogicalFilterOperator.Or" ShowPagingSummary="true"
     IsLoading=@isLoading>
