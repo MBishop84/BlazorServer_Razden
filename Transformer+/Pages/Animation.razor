@@ -1,0 +1,31 @@
+﻿﻿@using System.Globalization
+@using Microsoft.Extensions.Options
+
+<div data-aos="@_animationName" data-aos-delay="@_delay" data-aos-duration="@_duration">
+    @ChildContent
+</div>
+
+@code {
+    private string _animationName = "";
+    private string _duration = "";
+    private string _delay = "";
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public string AnimationName { get; set; } = "fade";
+
+    [Parameter]
+    public string AnimationDuration { get; set; } = "5000";
+
+    [Parameter]
+    public string AnimationDelay { get; set; } = "50";
+
+    protected override void OnParametersSet()
+    {
+        _duration = AnimationDuration;
+        _delay = AnimationDelay;
+        _animationName = AnimationName;
+    }
+}
