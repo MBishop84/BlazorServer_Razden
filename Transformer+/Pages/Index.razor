@@ -11,12 +11,21 @@
     <RadzenText TextStyle="TextStyle.Subtitle1">@quote</RadzenText>
     <RadzenText TextStyle="TextStyle.Subtitle2">@author</RadzenText>
     <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@GetContent" Text="Refresh Quote" ButtonStyle="ButtonStyle.Info"/>
+    <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Fly" Text="Fly By" ButtonStyle="ButtonStyle.Info"/>
 </RadzenStack>
+ @if (flyBy)
+{
+    <Animation AnimationName=@AnimationName.zoomIn AnimationDuration="2000">
+        <Animation AnimationName=@AnimationName.zoomOut AnimationDuration="2000" AnimationDelay="2000">
+            <img src="/images/Autobots.png" alt="stoic"/>
+        </Animation>
+    </Animation>
+}
 
 @code {
     private string quote = "Seeking Wisdom...";
     private string author = "...";
-    public string animationSelect = string.Empty;
+    private bool flyBy { get; set; }
 
     private struct Content
     {
@@ -25,10 +34,7 @@
     }
 
     protected override async Task OnInitializedAsync()
-    {
-        animationSelect = AnimationName.fade;
-        await GetContent();
-    }
+        => await GetContent();
 
     private async Task GetContent()
     {
@@ -43,5 +49,12 @@
             quote = content.Quote;
             author = content.Author;
         }
+    }
+
+    private async Task Fly()
+    {
+        flyBy = true;
+        await Task.Delay(2000);
+        flyBy = false;
     }
 }

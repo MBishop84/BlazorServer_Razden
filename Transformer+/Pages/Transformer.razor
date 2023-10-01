@@ -9,7 +9,7 @@
 <hr />
 <RadzenRow>
     <RadzenColumn>
-        <RadzenTextArea @bind-Value=@input Cols="60" Rows="35" />
+        <RadzenTextArea @bind-value="input" Cols="60" Rows="35" />
     </RadzenColumn>
     <RadzenColumn>
         <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround">
@@ -36,6 +36,6 @@
         </RadzenStack>
     </RadzenColumn>
     <RadzenColumn>
-        <RadzenTextArea @bind-Value=@output Cols="60" Rows="35" />
+        <RadzenTextArea @bind-value="output" Cols="60" Rows="35" />
     </RadzenColumn>
 </RadzenRow>
