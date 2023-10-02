@@ -1,19 +1,13 @@
 ﻿using System.Text;
-using Transformer_.Data.Animations;
 
 namespace Transformer_.Pages
 {
     public partial class Transformer
     {
-        private string animationSelect = string.Empty;
         private string input { get; set; } = string.Empty;
         private string output { get; set; } = string.Empty;
         private string error { get; set; } = "Input box is empty.";
-        protected override void OnInitialized()
-        {
-            animationSelect = AnimationName.fade;
-        }
-
+       
         private void Clear()
         {
             input = string.Empty;

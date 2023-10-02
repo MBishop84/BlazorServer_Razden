@@ -5,22 +5,26 @@
 <PageTitle>Home</PageTitle>
 
 <RadzenStack AlignItems="AlignItems.Center">
-    <Animation AnimationName=@AnimationName.fade>
+    <Animation>
         <img src="/images/stoic-strategist.png" style="height: 300px" alt="stoic"/>
     </Animation>
     <RadzenText TextStyle="TextStyle.Subtitle1">@quote</RadzenText>
     <RadzenText TextStyle="TextStyle.Subtitle2">@author</RadzenText>
-    <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@GetContent" Text="Refresh Quote" ButtonStyle="ButtonStyle.Info"/>
-    <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Fly" Text="Fly By" ButtonStyle="ButtonStyle.Info"/>
 </RadzenStack>
- @if (flyBy)
+<hr />
+@if (flyBy)
 {
-    <Animation AnimationName=@AnimationName.zoomIn AnimationDuration="2000">
-        <Animation AnimationName=@AnimationName.zoomOut AnimationDuration="2000" AnimationDelay="2000">
-            <img src="/images/Autobots.png" alt="stoic"/>
+        <Animation AnimationName=@AnimationName.zoomIn AnimationDuration="2000" AnimationDelay="0">
+            <img src="/images/Autobots.png" alt="Autobots" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"/>
         </Animation>
-    </Animation>
 }
+<RadzenCard Variant="Variant.Filled">
+    <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">Button Playground</RadzenText>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.End">
+        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@GetContent" Text="Refresh Quote" ButtonStyle="ButtonStyle.Success"/>
+        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Lighter" Click="@Fly" Text="The Watcher" ButtonStyle="ButtonStyle.Primary" Disabled="@flyBy"/>
+    </RadzenStack>
+</RadzenCard>
 
 @code {
     private string quote = "Seeking Wisdom...";
@@ -39,6 +43,7 @@
     private async Task GetContent()
     {
         quote = "Seeking Wisdom...";
+        author = "...";
         await Task.Delay(1000);
         using var client = new HttpClient();
         var response = await client.GetAsync("https://api.themotivate365.com/stoic-quote");
@@ -54,7 +59,7 @@
     private async Task Fly()
     {
         flyBy = true;
-        await Task.Delay(2000);
+        await Task.Delay(3000);
         flyBy = false;
     }
 }
