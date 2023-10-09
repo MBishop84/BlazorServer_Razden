@@ -31,8 +31,9 @@
             </RadzenStack>
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Schema" Text="Schema" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Fire" ButtonStyle="ButtonStyle.Danger" Style="width:29%">
-                    <RadzenIcon Icon="local_fire_department" />
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Fire" ButtonStyle="ButtonStyle.Secondary" Style="width:29%">
+                    <img src="/favicon.ico" style="width:20%" alt="Transformer"/>
+                    @* <RadzenIcon Icon="local_fire_department" /> *@
                 </RadzenButton>
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width:29%"/>
             </RadzenStack>

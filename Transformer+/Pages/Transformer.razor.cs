@@ -7,7 +7,7 @@ namespace Transformer_.Pages
         private string input { get; set; } = string.Empty;
         private string output { get; set; } = string.Empty;
         private string error { get; set; } = "Input box is empty.";
-       
+
         private void Clear()
         {
             input = string.Empty;
