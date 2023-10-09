@@ -1,11 +1,11 @@
 using Transformer_.Data.NASA;
 using Radzen;
-using Transformer_;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<NASAService>();
 builder.Services.AddRadzenComponents();
 

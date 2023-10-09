@@ -7,10 +7,11 @@
 
 <h1>Last Hundred Exoplanets Discovered.</h1>
 
-<RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" SelectionMode="DataGridSelectionMode.Multiple"
+<RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" SelectionMode="DataGridSelectionMode.Single"
+    FilterPopupRenderMode="PopupRenderMode.OnDemand" @bind-Value=@selectedPlanets CellContextMenu="@OnCellContextMenu"
     AllowGrouping="true" AllowSorting="true" PageSize="20" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left"
     Data="@exoplanets" TItem="Exoplanet" LogicalFilterOperator="LogicalFilterOperator.Or" ShowPagingSummary="true"
-    FilterMode="FilterMode.Advanced" IsLoading=@isLoading ContextMenu=@(args => ShowContextMenuWithItems(args))>
+    FilterMode="FilterMode.Advanced" IsLoading=@isLoading>
     <Columns>
         <RadzenDataGridColumn TItem="Exoplanet" Property="pl_name" Title="Name" Frozen="true"/>
         <RadzenDataGridColumn TItem="Exoplanet" Property="disc_year" Title="Year" />
@@ -26,29 +27,31 @@
     </Columns>
 </RadzenDataGrid>
 
-
 @code {
     private IEnumerable<Exoplanet> exoplanets;
+    private IList<Exoplanet> selectedPlanets;
 
     private bool isLoading => exoplanets == null;
 
-    protected override async Task OnInitializedAsync() =>
-        exoplanets = await NASAService.GetExoplanetsAsync();
-
-    void ShowContextMenuWithItems(MouseEventArgs args)
+    protected override async Task OnInitializedAsync()
     {
-        ContextMenuService.Open(args,
-            new List<ContextMenuItem> {
-                new ContextMenuItem(){ Text = "No options available", Value = 1, Icon = "home" },
-         }, OnMenuItemClick);
+        await base.OnInitializedAsync();
+        exoplanets = await NASAService.GetExoplanetsAsync();
+        selectedPlanets = exoplanets.Take(1).ToList();
     }
 
-    void OnMenuItemClick(MenuItemEventArgs args)
+    void OnCellContextMenu(DataGridCellMouseEventArgs<Exoplanet> args)
     {
-        Console.WriteLine($"Menu item with Value={args.Value} clicked");
-        if(!args.Value.Equals(3) && !args.Value.Equals(4))
+        selectedPlanets = new List<Exoplanet>() { args.Data };
+        var contextMenu = new List<ContextMenuItem>();
+        foreach (var planet in selectedPlanets)
         {
-            ContextMenuService.Close();
+            contextMenu.Add(new ContextMenuItem() { Text = planet.pl_name, Value = planet.pl_name, Icon = "language" });
         }
+
+        ContextMenuService.Open(args, contextMenu, 
+            (e) => { 
+                Console.WriteLine($"Planet {e.Value} clicked."); 
+            });
     }
 }
