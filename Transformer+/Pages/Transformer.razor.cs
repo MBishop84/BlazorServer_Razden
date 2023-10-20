@@ -232,7 +232,29 @@ namespace Transformer_.Pages
             }
         }
 
-        private void Fire()
+        private void Box()
+        {
+            try
+            {
+                var items = input.Split('\t');
+
+                if(items.Length <= 1)
+                    items = input.Split('\n');
+
+                var result = new StringBuilder();
+                foreach (var item in items)
+                {
+                    result.Append($"[{item}], ");
+                }
+                output = result.ToString();
+            }
+            catch (Exception ex)
+            {
+                output = ex.Message;
+            }
+        }
+
+        private void Wild()
         {
             try
             {
@@ -240,7 +262,6 @@ namespace Transformer_.Pages
                 var result = new StringBuilder();
                 foreach (var item in items)
                 {
-                    // result.Append($"[{item}],\n");
                     // result.Append($"{item} = p.{item},\n");
                     result.Append($"<td>@row.{item}</td>\n");
                 }
