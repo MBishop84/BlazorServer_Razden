@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace Transformer_.Pages
 {
@@ -238,13 +239,40 @@ namespace Transformer_.Pages
             {
                 var items = input.Split('\t');
 
-                if(items.Length <= 1)
+                if (items.Length <= 1)
                     items = input.Split('\n');
 
                 var result = new StringBuilder();
                 foreach (var item in items)
                 {
                     result.Append($"[{item}], ");
+                }
+                output = result.ToString();
+            }
+            catch (Exception ex)
+            {
+                output = ex.Message;
+            }
+        }
+
+        private void ApiClass()
+        {
+            try
+            {
+                var items = input.Split('\n');
+                var result = new StringBuilder();
+                foreach (var item in items)
+                {
+                    var itemArray = item.Replace("\"", "").Replace(",", "").Split(':');
+                    result.AppendFormat("///<summary>\n/// Gets/Sets the {0}.\n///</summary>\n", itemArray[0].Trim());
+                    result.Append(itemArray[1] switch
+                    {
+                        var a when int.TryParse(a, out int itemInt) =>
+                            $"public int {itemArray[0].Trim()} {{ get; set; }}\n\n",
+                        var b when DateTime.TryParse(b, new CultureInfo("en-US"), DateTimeStyles.None, out var itemDate) =>
+                            $"public DateTime? {itemArray[0].Trim()} {{ get; set; }}\n\n",
+                        _ => $"public string {itemArray[0].Trim()} {{ get; set; }} = string.Empty;\n\n"
+                    });
                 }
                 output = result.ToString();
             }
