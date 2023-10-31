@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Components;
+using Newtonsoft.Json;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -7,11 +8,12 @@ namespace Transformer_.Pages
 {
     public partial class Transformer
     {
+        [Inject]
+        private IConfiguration Configuration { get; set; }
         private string input { get; set; } = string.Empty;
         private string output { get; set; } = string.Empty;
         private string error { get; set; } = "Input box is empty.";
         private bool working { get; set; } = false;
-
         private List<Message> messages = new();
 
         private sealed class Message
@@ -19,14 +21,14 @@ namespace Transformer_.Pages
             public string? role { get; set; }
             public string? content { get; set; }
         }
-
+        
         private void Clear()
         {
             input = string.Empty;
             output = string.Empty;
         }
 
-        private void AskGpt()
+        private async Task AskGpt()
         {
             if (string.IsNullOrEmpty(input))
             {
@@ -43,8 +45,7 @@ namespace Transformer_.Pages
             try
             {
                 messages.Add(new Message() { role = "user", content = input });
-                
-                output = CallOpenAi().Result ?? error;
+                output = await CallOpenAi() ?? error;
                 messages.Add(new Message() { role = "assistant", content = output });
             }
             catch (Exception ex)
@@ -71,9 +72,9 @@ namespace Transformer_.Pages
                 var response = await client.PostAsync(
                     @"https://api.openai.com/v1/chat/completions",
                     new StringContent(JsonConvert.SerializeObject(request),
-                    Encoding.UTF8, "application/json")).ConfigureAwait(false);
+                    Encoding.UTF8, "application/json"));
 
-                var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var result = await response.Content.ReadAsStringAsync();
                 dynamic gptResponse = JsonConvert.DeserializeObject(result);
                 return gptResponse?.choices[0].message.content;
             }
