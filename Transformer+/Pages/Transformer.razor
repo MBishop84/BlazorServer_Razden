@@ -37,7 +37,7 @@
             </RadzenStack>
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Schema" Text="Schema" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild"  Icon="local_fire_department" ButtonStyle="ButtonStyle.Secondary" Style="width:29%" />
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild"  Icon="local_fire_department" ButtonStyle="ButtonStyle.Danger" Style="width:29%" />
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width:29%"/>
             </RadzenStack>
             @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
