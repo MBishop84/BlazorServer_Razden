@@ -36,7 +36,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        exoplanets = await NASAService.GetExoplanetsAsync();
+        exoplanets = await NASAService.GetExoPlanetsAsync();
         selectedPlanets = exoplanets.Take(1).ToList();
     }
 

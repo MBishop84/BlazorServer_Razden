@@ -1,5 +1,6 @@
 ﻿@page "/transformer"
 @using Transformer_.Data.Animations;
+@inject IConfiguration Configuration
 
 <PageTitle>Transformer</PageTitle>
 <Animation AnimationName=@AnimationName.zoomIn>
@@ -31,16 +32,22 @@
             </RadzenStack>
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Box" Text="[...]" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@ApiClass" Text="Api->Class" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JsonToClass" Text="Json->Class" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Text="Empty" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
             </RadzenStack>
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Schema" Text="Schema" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild" ButtonStyle="ButtonStyle.Secondary" Style="width:29%">
-                    <img src="/favicon.ico" style="width:20%" alt="Transformer"/>
-                </RadzenButton>
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild"  Icon="local_fire_department" ButtonStyle="ButtonStyle.Secondary" Style="width:29%" />
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width:29%"/>
             </RadzenStack>
+            @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
+            {
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@AskGpt" ButtonStyle="ButtonStyle.Secondary" Style="width:100%">
+                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                    <span class="rz-button-text rz-mx-9">Ask ChatGPT</span>
+                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                </RadzenButton>
+            }
         </RadzenCard>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">

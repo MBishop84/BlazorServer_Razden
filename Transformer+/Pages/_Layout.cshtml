@@ -5,19 +5,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-@inject IConfiguration Configuration
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/@Configuration["Theme"]">
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/dark.css">
+    @* <link rel="stylesheet" href="_content/Radzen.Blazor/css/software.css">
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/humanistic.css">
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material.css">
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard.css">
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default.css"> *@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link href="css/site.css" rel="stylesheet" />
     <link href="Transformer+.styles.css" rel="stylesheet" />
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
 <body>
-    
     @RenderBody()
 
     <div id="blazor-error-ui">

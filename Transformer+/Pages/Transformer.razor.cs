@@ -9,10 +9,20 @@ namespace Transformer_.Pages
         private string output { get; set; } = string.Empty;
         private string error { get; set; } = "Input box is empty.";
 
+        private List<Tuple<string, string>> messages = new();
+
         private void Clear()
         {
             input = string.Empty;
             output = string.Empty;
+        }
+
+        private void AskGpt()
+        {
+            var url = "https://api.openai.com/v1/chat/completions";
+            var key = Configuration["GPTKey"];
+            messages.Add(new Tuple<string, string>("user", input));
+            output = messages.LastOrDefault()?.Item2 ?? error;
         }
 
         private void Int() =>
@@ -255,7 +265,7 @@ namespace Transformer_.Pages
             }
         }
 
-        private void ApiClass()
+        private void JsonToClass()
         {
             try
             {
