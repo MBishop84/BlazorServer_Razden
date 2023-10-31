@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using Newtonsoft.Json;
+using System.Globalization;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace Transformer_.Pages
@@ -8,8 +10,15 @@ namespace Transformer_.Pages
         private string input { get; set; } = string.Empty;
         private string output { get; set; } = string.Empty;
         private string error { get; set; } = "Input box is empty.";
+        private bool working { get; set; } = false;
 
-        private List<Tuple<string, string>> messages = new();
+        private List<Message> messages = new();
+
+        private sealed class Message
+        {
+            public string? role { get; set; }
+            public string? content { get; set; }
+        }
 
         private void Clear()
         {
@@ -19,10 +28,59 @@ namespace Transformer_.Pages
 
         private void AskGpt()
         {
-            var url = "https://api.openai.com/v1/chat/completions";
-            var key = Configuration["GPTKey"];
-            messages.Add(new Tuple<string, string>("user", input));
-            output = messages.LastOrDefault()?.Item2 ?? error;
+            if (string.IsNullOrEmpty(input))
+            {
+                output = error;
+                return;
+            }
+            else if (string.IsNullOrEmpty(Configuration["GPTKey"]))
+            {
+                output = "You are missing the api key.";
+                return;
+            }
+            output = "Please wait...";
+            working = true;
+            try
+            {
+                messages.Add(new Message() { role = "user", content = input });
+                
+                output = CallOpenAi().Result ?? error;
+                messages.Add(new Message() { role = "assistant", content = output });
+            }
+            catch (Exception ex)
+            {
+                output = ex.Message;
+            }
+            finally
+            {
+                working = false;
+            }
+        }
+
+        private async Task<string?> CallOpenAi()
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Configuration["GPTKey"]);
+                var request = new
+                {
+                    model = "gpt-3.5-turbo",
+                    messages = messages.ToArray(),
+                };
+                var response = await client.PostAsync(
+                    @"https://api.openai.com/v1/chat/completions",
+                    new StringContent(JsonConvert.SerializeObject(request),
+                    Encoding.UTF8, "application/json")).ConfigureAwait(false);
+
+                var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                dynamic gptResponse = JsonConvert.DeserializeObject(result);
+                return gptResponse?.choices[0].message.content;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
 
         private void Int() =>

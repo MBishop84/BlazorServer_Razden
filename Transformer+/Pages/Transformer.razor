@@ -11,7 +11,7 @@
 <hr />
 <RadzenRow JustifyContent="JustifyContent.SpaceEvenly" AlignItems="AlignItems.Normal" Gap="0rem">
     <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea @bind-value="input" Cols="60" Rows="35" />
+        <RadzenTextArea Placeholder="Input" @bind-Value=@input Cols="60" Rows="35" />
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
         <RadzenCard Variant="Variant.Filled">
@@ -42,7 +42,7 @@
             </RadzenStack>
             @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
             {
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@AskGpt" ButtonStyle="ButtonStyle.Secondary" Style="width:100%">
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@AskGpt" ButtonStyle="ButtonStyle.Secondary" Style="width:100%" Disabled="working">
                     <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
                     <span class="rz-button-text rz-mx-9">Ask ChatGPT</span>
                     <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
@@ -51,6 +51,6 @@
         </RadzenCard>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea @bind-value="output" Cols="60" Rows="35" />
+        <RadzenTextArea Placeholder="Output" @bind-Value=@output Cols="60" Rows="35" />
     </RadzenColumn>
 </RadzenRow>
