@@ -11,7 +11,7 @@ namespace Transformer_.Data.NASA
             url = configuration["NASA:ExoplanetRequestUrl"];
         }
 
-        public async Task<IEnumerable<Exoplanet>> GetExoplanetsAsync()
+        public async Task<IEnumerable<Exoplanet>> GetExoPlanetsAsync()
         {
             try
             {
