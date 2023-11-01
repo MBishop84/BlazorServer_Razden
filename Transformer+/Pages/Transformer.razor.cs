@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Xml;
 
 namespace Transformer_.Pages
 {
@@ -344,6 +346,27 @@ namespace Transformer_.Pages
                     });
                 }
                 output = result.ToString();
+            }
+            catch (Exception ex)
+            {
+                output = ex.Message;
+            }
+        }
+
+        private void JsonToXML()
+        {
+            try
+            {
+                var doc = JsonConvert.DeserializeXmlNode(
+                    @"{'DefaultRoot':{" + $"{input}}}}}"
+                    );
+                var sw = new StringWriter();
+                var writer = new XmlTextWriter(sw)
+                {
+                    Formatting = System.Xml.Formatting.Indented
+                };
+                doc?.WriteContentTo(writer);
+                output = sw.ToString();
             }
             catch (Exception ex)
             {
