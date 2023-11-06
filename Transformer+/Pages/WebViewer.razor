@@ -1,0 +1,34 @@
+﻿@page "/webviewer"
+@using System.IO;
+@inject IJSRuntime JSRuntime
+@inject IWebHostEnvironment Environment
+
+@* <InputFile OnChange="@LoadFile" /> *@
+<div id='viewer' style='width: 95%; height: 95vh; margin: 0 auto;'></div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeAsync<object>("webviewerFunctions.initWebViewer");
+    }
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var path = Path.Combine(Environment.WebRootPath, "files", e.File.Name);
+            using var stream = new FileStream(path, FileMode.Create);
+            await e.File.OpenReadStream().CopyToAsync(stream);
+            await OpenFile(path);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task OpenFile(string path)
+    {
+        await JSRuntime.InvokeAsync<object>("webviewerFunctions.loadDocument", path);
+    }
+}

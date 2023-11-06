@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -23,7 +22,7 @@ namespace Transformer_.Pages
             public string? role { get; set; }
             public string? content { get; set; }
         }
-        
+
         private void Clear()
         {
             input = string.Empty;
@@ -330,22 +329,26 @@ namespace Transformer_.Pages
         {
             try
             {
-                var items = input.Split('\n');
-                var result = new StringBuilder();
-                foreach (var item in items)
+                dynamic? jsonObject = JsonConvert.DeserializeObject($"{{{input}}}");
+                if (jsonObject != null)
                 {
-                    var itemArray = item.Replace("\"", "").Replace(",", "").Split(':');
-                    result.AppendFormat("///<summary>\n/// Gets/Sets the {0}.\n///</summary>\n", itemArray[0].Trim());
-                    result.Append(itemArray[1] switch
+                    var result = new StringBuilder();
+                    foreach (var i in jsonObject)
                     {
-                        var a when int.TryParse(a, out int itemInt) =>
-                            $"public int {itemArray[0].Trim()} {{ get; set; }}\n\n",
-                        var b when DateTime.TryParse(b, new CultureInfo("en-US"), DateTimeStyles.None, out var itemDate) =>
-                            $"public DateTime? {itemArray[0].Trim()} {{ get; set; }}\n\n",
-                        _ => $"public string {itemArray[0].Trim()} {{ get; set; }} = string.Empty;\n\n"
-                    });
+                        result.AppendFormat("///<summary>\n/// Gets/Sets the {0}.\n///</summary>\n", i.Name);
+                        result.Append($"{i.Value}" switch
+                        {
+                            var a when int.TryParse(a, out int itemInt) =>
+                                $"public int {i.Name} {{ get; set; }}\n\n",
+                            var b when DateTime.TryParse(b, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime itemDate) =>
+                                $"public DateTime? {i.Name} {{ get; set; }}\n\n",
+                            var c when bool.TryParse(c, out bool itemBool) =>
+                                $"public bool {i.Name} {{ get; set; }}\n\n",
+                            _ => $"public string {i.Name} {{ get; set; }} = string.Empty;\n\n"
+                        });
+                    }
+                    output = result.ToString();
                 }
-                output = result.ToString();
             }
             catch (Exception ex)
             {
