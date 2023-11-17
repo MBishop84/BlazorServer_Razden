@@ -14,6 +14,14 @@
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
         <RadzenCard Variant="Variant.Filled">
+            @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
+            {
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@AskGpt" ButtonStyle="ButtonStyle.Secondary" Style="width:100%" Disabled="working">
+                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                    <span class="rz-button-text rz-mx-9">Ask ChatGPT</span>
+                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                </RadzenButton>
+            }
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Int" Text="Int" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@StrDouble" Text="Str" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
@@ -39,14 +47,6 @@
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild"  Icon="local_fire_department" ButtonStyle="ButtonStyle.Danger" Style="width:29%" />
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width:29%"/>
             </RadzenStack>
-            @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
-            {
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@AskGpt" ButtonStyle="ButtonStyle.Secondary" Style="width:100%" Disabled="working">
-                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
-                    <span class="rz-button-text rz-mx-9">Ask ChatGPT</span>
-                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
-                </RadzenButton>
-            }
         </RadzenCard>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
