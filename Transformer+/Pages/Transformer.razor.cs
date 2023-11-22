@@ -115,6 +115,10 @@ namespace Transformer_.Pages
             try
             {
                 var inArray = input.Split("\n");
+
+                if (inArray.Length <= 1)
+                    inArray = input.Split("\t");
+
                 var result = new StringBuilder();
 
                 foreach (var item in inArray)
@@ -144,13 +148,17 @@ namespace Transformer_.Pages
             try
             {
                 var inArray = input.Split("\n");
+
+                if (inArray.Length <= 1)
+                    inArray = input.Split("\t");
+
                 var result = new StringBuilder();
 
                 foreach (var item in inArray)
                 {
                     result.AppendFormat(item switch
                     {
-                        var a when int.TryParse(a, out var ignore) => "{0},",
+                        var a when int.TryParse(a, out var ignore) || a == "NULL" => "{0},",
                         _ => "'{0}',"
                     }, item);
                 }
