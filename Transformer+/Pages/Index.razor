@@ -46,14 +46,22 @@
         quote = "Seeking Wisdom...";
         author = "...";
         await Task.Delay(1000);
-        using var client = new HttpClient();
-        var response = await client.GetAsync("https://api.themotivate365.com/stoic-quote");
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var json = await response.Content.ReadAsStringAsync();
-            var content = JsonConvert.DeserializeObject<Content>(json);
-            quote = content.Quote;
-            author = content.Author;
+            using var client = new HttpClient();
+            var response = await client.GetAsync("https://api.themotivate365.com/stoic-quote");
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var content = JsonConvert.DeserializeObject<Content>(json);
+                quote = content.Quote;
+                author = content.Author;
+            }
+        }
+        catch (Exception ex)
+        {
+            quote = "Sorry, No wisdom is forthcoming.";
+            author = ex.Message;
         }
     }
 
