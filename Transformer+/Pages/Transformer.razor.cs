@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
+using Radzen;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -15,7 +16,14 @@ namespace Transformer_.Pages
         private string output { get; set; } = string.Empty;
         private string error { get; set; } = "Input box is empty.";
         private bool working { get; set; } = false;
+
         private List<Message> messages = new();
+
+        private void ShowTooltip(ElementReference elementReference, TooltipOptions options)
+        {
+            options.Duration = 5000;
+            tooltipService.Open(elementReference, options.Text, options);
+        }
 
         private sealed class Message
         {
@@ -389,20 +397,20 @@ namespace Transformer_.Pages
         {
             try
             {
-                var items = input.Split('\n');
-                var result = new StringBuilder();
-                foreach (var item in items)
-                {
-                    // result.Append($"{item} = p.{item},\n");
-                    //result.Append($"<td>@row.{item}</td>\n");
-                    var thisItem = item.Split(':');
-                    if (thisItem[0].Contains('?'))
-                        result.Append($"{item.Replace(";", "")} | null;\n");
-                    else
-                        result.Append($"{thisItem[0]}?: {thisItem[1].Replace(";", "")} | null;\n");
+                //output = string.Join("", input.Split('\n').Select(x =>
+                //{
+                //    var thisItem = x.Split(':');
+                //    return thisItem[0].Contains('?')
+                //        ? $"{x.Replace(";", "")} | null;\n"
+                //        : $"{thisItem[0]}?: {thisItem[1].Replace(";", "")} | null;\n";
+                //}));
 
-                }
-                output = result.ToString();
+                output = string.Join("", input.Split('\n').Select(x =>
+                {
+                    var y = x.Split('\t');
+                    y[1] = y[1].Equals("varchar") ? "varchar(50)" : y[1];
+                    return $"[{y[0]}] {y[1]} '$.{y[0]}',\n";
+                }));
             }
             catch (Exception ex)
             {
