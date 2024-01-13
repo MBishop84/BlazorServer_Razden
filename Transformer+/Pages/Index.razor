@@ -22,40 +22,53 @@
     <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">Button Playground</RadzenText>
     <hr />
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceEvenly">
-        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@GetContent" Text="Refresh Quote" ButtonStyle="ButtonStyle.Success"/>
+        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@OnInitializedAsync" Text="Refresh Quote" ButtonStyle="ButtonStyle.Success"/>
         <RadzenButton Variant="Variant.Outlined" Shade="Shade.Lighter" Click="@Fly" Text="The Watcher" ButtonStyle="ButtonStyle.Primary" Disabled="@flyBy"/>
     </RadzenStack>
 </RadzenCard>
 
 @code {
+    private IEnumerable<Content>? content;
     private string quote = "Seeking Wisdom...";
     private string author = "...";
     private bool flyBy { get; set; }
 
     private struct Content
     {
-        public string Quote { get; set; }
-        public string Author { get; set; }
+        public string id { get; set; }
+        public string text { get; set; }
+        public Author author { get; set; }
+    }
+
+    private struct Author
+    {
+        public string id { get; set; }
+        public string name { get; set; }
     }
 
     protected override async Task OnInitializedAsync()
-        => await GetContent();
-
-    private async Task GetContent()
     {
-        quote = "Seeking Wisdom...";
-        author = "...";
-        await Task.Delay(1000);
+        if (content is null)
+            content = await GetContent();
+        if(content is not null)
+        {
+            Random rnd = new();
+            var i = rnd.Next(content.Count());
+            quote = content.ToArray()[i].text;
+            author = content.ToArray()[i].author.name;
+        }
+    }
+
+    private async Task<IEnumerable<Content>?> GetContent()
+    {
         try
         {
             using var client = new HttpClient();
-            var response = await client.GetAsync("https://api.themotivate365.com/stoic-quote");
+            var response = await client.GetAsync("https://api.fisenko.net/v1/quotes/en");
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var content = JsonConvert.DeserializeObject<Content>(json);
-                quote = content.Quote;
-                author = content.Author;
+                return JsonConvert.DeserializeObject<IEnumerable<Content>>(json);
             }
         }
         catch (Exception ex)
@@ -63,6 +76,7 @@
             quote = "Sorry, No wisdom is forthcoming.";
             author = ex.Message;
         }
+        return null;
     }
 
     private async Task Fly()
