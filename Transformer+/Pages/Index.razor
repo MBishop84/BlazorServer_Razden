@@ -9,14 +9,14 @@
         <img src="/images/stoic-strategist.png" style="height: 300px" alt="stoic"/>
     </Animation>
     <RadzenText TextStyle="TextStyle.Subtitle1">@quote</RadzenText>
-    <RadzenText TextStyle="TextStyle.Subtitle2">@author</RadzenText>
-</RadzenStack>
-<hr />
-@if (flyBy)
+        <RadzenText TextStyle="TextStyle.Subtitle2">@author</RadzenText>
+    </RadzenStack>
+    <hr />
+    @if (flyBy)
 {
-    <Animation AnimationName=@AnimationName.zoomIn AnimationDuration="2000" AnimationDelay="0">
-        <img src="/images/Autobots.png" alt="Autobots" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"/>
-    </Animation>
+        <Animation AnimationName=@AnimationName.zoomIn AnimationDuration="2000" AnimationDelay="0">
+            <img src="/images/Autobots.png" alt="Autobots" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"/>
+        </Animation>
 }
 <RadzenCard Variant="Variant.Filled" Class="rz-mx-auto" Style="width: 50%">
     <RadzenText TextStyle="TextStyle.H6" TextAlign="TextAlign.Center">Button Playground</RadzenText>
@@ -28,47 +28,44 @@
 </RadzenCard>
 
 @code {
-    private IEnumerable<Content>? content;
+    private Content? content;
     private string quote = "Seeking Wisdom...";
     private string author = "...";
     private bool flyBy { get; set; }
 
-    private struct Content
+    private class Content
     {
-        public string id { get; set; }
-        public string text { get; set; }
-        public Author author { get; set; }
+        public string? id { get; set; }
+        public string? text { get; set; }
+        public Author? author { get; set; }
     }
 
-    private struct Author
+    private class Author
     {
-        public string id { get; set; }
-        public string name { get; set; }
+        public string? id { get; set; }
+        public string? name { get; set; }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        if (content is null)
-            content = await GetContent();
-        if(content is not null)
+        content = await GetContent();
+        if (content != null)
         {
-            Random rnd = new();
-            var i = rnd.Next(content.Count());
-            quote = content.ToArray()[i].text;
-            author = content.ToArray()[i].author.name;
+            quote = content.text;
+            author = content.author.name;
         }
     }
 
-    private async Task<IEnumerable<Content>?> GetContent()
+    private async Task<Content?> GetContent()
     {
         try
         {
             using var client = new HttpClient();
-            var response = await client.GetAsync("https://api.fisenko.net/v1/quotes/en");
+            var response = await client.GetAsync("https://api.fisenko.net/v1/quotes/en/random");
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<IEnumerable<Content>>(json);
+                return JsonConvert.DeserializeObject<Content>(json);
             }
         }
         catch (Exception ex)
