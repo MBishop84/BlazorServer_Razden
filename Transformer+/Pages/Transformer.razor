@@ -72,7 +72,20 @@
             </RadzenStack>
         </RadzenCard>
         <hr />
-        <RadzenTextArea Placeholder="User JavaScript Code" @bind-Value=@userCode Cols="60" Rows="14"/>
+        @* <RadzenTextArea Placeholder="User JavaScript Code" @bind-Value=@userCode Cols="60" Rows="14"/> *@
+        <RadzenHtmlEditor @bind-Value=@userCode style="height: 300px;" Execute=@StarterCode>
+            <RadzenHtmlEditorCustomTool CommandName="Starter Code Example" Icon="code" Title="Starter Code Example" />
+            <RadzenHtmlEditorUndo />
+            <RadzenHtmlEditorRedo />
+            <RadzenHtmlEditorAlignLeft />
+            <RadzenHtmlEditorAlignCenter />
+            <RadzenHtmlEditorAlignRight />
+            <RadzenHtmlEditorJustify />
+            <RadzenHtmlEditorIndent />
+            <RadzenHtmlEditorOutdent />
+            <RadzenHtmlEditorColor />
+            <RadzenHtmlEditorFontName />
+        </RadzenHtmlEditor>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
         <RadzenTextArea Placeholder="Output" @bind-Value=@output Cols="60" Rows="35" id="output"/>

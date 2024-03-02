@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using HtmlAgilityPack;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using Radzen;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace Transformer_.Pages
@@ -20,10 +22,9 @@ namespace Transformer_.Pages
 
         private string input = string.Empty;
         private string output = string.Empty;
-        private string userCode = "const input = document.getElementById('input').value;\nlet output = `Hello ${input}`;\ndocument.getElementById('output').value = output;";
+        private string userCode = string.Empty;
         private bool working = false;
         private readonly string error = "Input box is empty.";
-
         private List<Message> messages = [];
 
         private void ShowTooltip(ElementReference elementReference, TooltipOptions options)
@@ -429,9 +430,15 @@ namespace Transformer_.Pages
         {
             try
             {
+                var userBox = "const input = document.getElementById('input').value;\nlet output = '';\n[***]\ndocument.getElementById('output').value = output;";
                 if (!string.IsNullOrEmpty(userCode))
                 {
-                    await JsRuntime.InvokeAsync<string>("runUserScript", userCode);
+                    HtmlDocument htmlDoc = new();
+                    htmlDoc.LoadHtml(userCode);
+                    var superClean = htmlDoc.DocumentNode.InnerText
+                        .Replace("&gt;", ">").Replace("&lt;", "<").Replace("&nbsp;", " ");
+                    Console.WriteLine(superClean);
+                    await JsRuntime.InvokeAsync<string>("runUserScript", userBox.Replace("[***]", superClean));
                 }
             }
             catch (Exception ex)
@@ -439,5 +446,8 @@ namespace Transformer_.Pages
                 output = ex.Message;
             }
         }
+
+        private void StarterCode() =>             
+            userCode = @"output = input.split('\n').map(x => x.length >= 5 ? `Hello ${x}` : `GoodBye ${x}`).join(',\n');";
     }
 }
