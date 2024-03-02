@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using Radzen;
 using System.Globalization;
@@ -12,12 +13,18 @@ namespace Transformer_.Pages
     {
         [Inject]
         private IConfiguration Configuration { get; set; }
-        private string input { get; set; } = string.Empty;
-        private string output { get; set; } = string.Empty;
-        private string error { get; set; } = "Input box is empty.";
-        private bool working { get; set; } = false;
+        [Inject]
+        private TooltipService tooltipService { get; set; }
+        [Inject]
+        private IJSRuntime JsRuntime { get; set; }
 
-        private List<Message> messages = new();
+        private string input = string.Empty;
+        private string output = string.Empty;
+        private string userCode = "const input = document.getElementById('input').value;\nlet output = `Hello ${input}`;\ndocument.getElementById('output').value = output;";
+        private bool working = false;
+        private readonly string error = "Input box is empty.";
+
+        private List<Message> messages = [];
 
         private void ShowTooltip(ElementReference elementReference, TooltipOptions options)
         {
@@ -200,7 +207,7 @@ namespace Transformer_.Pages
                         var b when b.Equals("NULL", StringComparison.OrdinalIgnoreCase) => "\"{0}\":\"\",\n",
                         var c when string.IsNullOrEmpty(c) => "\"{0}\":\"\",\n",
                         _ => "\"{0}\":\"{1}\",\n"
-                    }, cols[x], values[x]);
+                    }, Char.ToLowerInvariant(cols[x][0]) + cols[x][1..], values[x]);
                 }
                 result.Length -= 2;
                 output = $"{{\n{result}\n}}";
@@ -331,7 +338,7 @@ namespace Transformer_.Pages
                 var result = new StringBuilder();
                 foreach (var item in items)
                 {
-                    result.Append($"[{item}], ");
+                    result.Append($"[{item}],\n\t");
                 }
                 output = result.ToString();
             }
@@ -409,8 +416,23 @@ namespace Transformer_.Pages
                 {
                     var y = x.Split('\t');
                     y[1] = y[1].Equals("varchar") ? "varchar(50)" : y[1];
-                    return $"[{y[0]}] {y[1]} '$.{y[0]}',\n";
+                    return $"[{y[0]}] {y[1]},\n\t";
                 }));
+            }
+            catch (Exception ex)
+            {
+                output = ex.Message;
+            }
+        }
+
+        private async Task JavaScript()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(userCode))
+                {
+                    await JsRuntime.InvokeAsync<string>("runUserScript", userCode);
+                }
             }
             catch (Exception ex)
             {

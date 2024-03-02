@@ -61,12 +61,7 @@
         try
         {
             using var client = new HttpClient();
-            var response = await client.GetAsync("https://api.fisenko.net/v1/quotes/en/random");
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<Content>(json);
-            }
+            return await client.GetFromJsonAsync<Content>("https://api.fisenko.net/v1/quotes/en/random");
         }
         catch (Exception ex)
         {

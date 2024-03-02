@@ -1,6 +1,5 @@
 ﻿@page "/transformer"
 @using Transformer_.Data.Animations;
-@inject TooltipService tooltipService
 
 <PageTitle>Transformer</PageTitle>
 <Animation AnimationName=@AnimationName.zoomIn>
@@ -11,7 +10,7 @@
 <hr />
 <RadzenRow JustifyContent="JustifyContent.SpaceEvenly" AlignItems="AlignItems.Normal" Gap="0rem">
     <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea Placeholder="Input" @bind-Value=@input Cols="60" Rows="35" />
+        <RadzenTextArea Placeholder="Input" @bind-Value=@input Cols="60" Rows="35" id="input"/>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
         <RadzenCard Variant="Variant.Filled">
@@ -68,9 +67,19 @@
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild"  Icon="local_fire_department" ButtonStyle="ButtonStyle.Danger" Style="width:29%" />
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width:29%"/>
             </RadzenStack>
+            <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript"  Text="JavaScript" ButtonStyle="ButtonStyle.Danger" Style="width:29%" />
+            </RadzenStack>
         </RadzenCard>
+        <hr />
+        <RadzenTextArea Placeholder="User JavaScript Code" @bind-Value=@userCode Cols="60" Rows="14"/>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea Placeholder="Output" @bind-Value=@output Cols="60" Rows="35" />
+        <RadzenTextArea Placeholder="Output" @bind-Value=@output Cols="60" Rows="35" id="output"/>
     </RadzenColumn>
 </RadzenRow>
+<script>
+    function runUserScript(userCode) {
+        eval(userCode);
+    }
+</script>
