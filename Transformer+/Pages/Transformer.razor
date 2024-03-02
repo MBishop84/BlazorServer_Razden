@@ -16,17 +16,17 @@
         <RadzenCard Variant="Variant.Filled">
             @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
             {
-                <RadzenButton 
-                    Variant="Variant.Outlined" 
-                    Shade="Shade.Darker" 
-                    Click="@AskGpt" 
-                    ButtonStyle="ButtonStyle.Secondary" 
-                    Style="width:100%" 
-                    Disabled="working">
-                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
-                    <span class="rz-button-text rz-mx-9">Ask ChatGPT</span>
-                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
-                </RadzenButton>
+                    <RadzenButton 
+                        Variant="Variant.Outlined" 
+                        Shade="Shade.Darker" 
+                        Click="@AskGpt" 
+                        ButtonStyle="ButtonStyle.Secondary" 
+                        Style="width:100%" 
+                        Disabled="working">
+                        <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                        <span class="rz-button-text rz-mx-9">Ask ChatGPT</span>
+                        <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                    </RadzenButton>
             }
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton 
@@ -78,13 +78,11 @@
             <RadzenHtmlEditorUndo />
             <RadzenHtmlEditorRedo />
             <RadzenHtmlEditorAlignLeft />
-            <RadzenHtmlEditorAlignCenter />
-            <RadzenHtmlEditorAlignRight />
-            <RadzenHtmlEditorJustify />
             <RadzenHtmlEditorIndent />
             <RadzenHtmlEditorOutdent />
             <RadzenHtmlEditorColor />
             <RadzenHtmlEditorFontName />
+            <RadzenHtmlEditorFontSize />
         </RadzenHtmlEditor>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
