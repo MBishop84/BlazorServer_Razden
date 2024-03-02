@@ -31,29 +31,31 @@
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton 
                     Variant="Variant.Outlined" Shade="Shade.Darker"  Click="@Int" Text="Int" ButtonStyle="ButtonStyle.Primary" Style="width:29%" 
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\n2\n3 -> 1,2,3"}) )"/>
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\n2\n3 -> 1,2,3", Position = TooltipPosition.Left }) )"/>
                 <RadzenButton 
                     Variant="Variant.Outlined" Shade="Shade.Darker" Click="@StrDouble" Text="Str" ButtonStyle="ButtonStyle.Primary" Style="width:29%" 
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A\nB\nC -> \"A\",\"B\",\"C\"" }))"/>
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A\nB\nC -> \"A\",\"B\",\"C\"", Position = TooltipPosition.Top }))"/>
                 <RadzenButton 
                     Variant="Variant.Outlined" Shade="Shade.Darker" Click="@MixDouble" Text="Mix" ButtonStyle="ButtonStyle.Primary" Style="width:29%" 
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\nB\n3 -> 1,\"B\",3" }))"/>
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\nB\n3 -> 1,\"B\",3", Position = TooltipPosition.Right }))"/>
             </RadzenStack>
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton 
                     Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Entity" Text="Entity" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "NAME\tTYPE\tNULL? -> public TYPE? NAME { get; set; }" }))"/>
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ 
+                            Text = "NAME\tTYPE\tNULL? -> public TYPE? NAME { get; set; }", 
+                            Position = TooltipPosition.Left }))"/>
                 <RadzenButton 
                     Variant="Variant.Outlined" Shade="Shade.Darker" Click="@StrSingle" Text="'Str'" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A\nB\nC -> 'A','B','C'" }))"/>
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A\nB\nC -> 'A','B','C'", Position = TooltipPosition.Top }))"/>
                 <RadzenButton 
                     Variant="Variant.Outlined" Shade="Shade.Darker" Click="@MixSingle" Text="'Mix'" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\nB\n3 -> 1,'B',3" }))"/>
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\nB\n3 -> 1,'B',3", Position = TooltipPosition.Right }))"/>
             </RadzenStack>
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
                 <RadzenButton 
                     Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Snippet" Text="Snippet" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A B C -> \"A B C\"," }))"/>
+                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A B C -> \"A B C\",", Position = TooltipPosition.Left }))"/>
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Json" Text="Json" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Conversion" Text="Converter" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
             </RadzenStack>
@@ -68,7 +70,7 @@
                 <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width:29%"/>
             </RadzenStack>
             <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript"  Text="JavaScript" ButtonStyle="ButtonStyle.Danger" Style="width:29%" />
+                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript"  Text="< JavaScript >" ButtonStyle="ButtonStyle.Success" Style="width:29%" />
             </RadzenStack>
         </RadzenCard>
         <hr />
