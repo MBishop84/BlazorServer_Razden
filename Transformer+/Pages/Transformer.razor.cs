@@ -6,7 +6,6 @@ using Radzen;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace Transformer_.Pages
@@ -19,11 +18,11 @@ namespace Transformer_.Pages
         private TooltipService tooltipService { get; set; }
         [Inject]
         private IJSRuntime JsRuntime { get; set; }
-
+        string? _split, _join, _boundAll, _boundEach;
         private string input = string.Empty;
         private string output = string.Empty;
         private string userCode = string.Empty;
-        private bool working = false;
+        private bool working = false, _dynamic;
         private readonly string error = "Input box is empty.";
         private List<Message> messages = [];
 
