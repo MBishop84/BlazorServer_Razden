@@ -1,5 +1,6 @@
 ﻿@page "/transformer"
 @using Transformer_.Data.Animations;
+@using System.Collections
 
 <PageTitle>Transformer</PageTitle>
 <Animation AnimationName="@AnimationName.zoomIn">
@@ -126,7 +127,14 @@
                     <RadzenText TextStyle="TextStyle.Overline" Text="Javascript"/>
                 </HeaderTemplate>
                 <ChildContent>
-                    <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript" Text="< Execute >" ButtonStyle="ButtonStyle.Success" />
+                    <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                        <RadzenFormField Text="RadzenDropDownDataGrid" Variant="Variant.Outlined" Style="width: 29%">
+                            <RadzenDropDownDataGrid Data="@jsTransforms" Value="@jsTransform" Change="@(args => jsTransform = $"{args}")"/>
+                        </RadzenFormField>
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@PreviousJs" Text="<Prev" ButtonStyle="ButtonStyle.Success" Style="width: 15%"/>
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@NextJs" Text="Next>" ButtonStyle="ButtonStyle.Success" Style="width: 15%"/>
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript" Text="Execute" ButtonStyle="ButtonStyle.Success" Style="width: 29%"/>
+                    </RadzenStack>
                     <br/>
                     <StandaloneCodeEditor Id="user_code" ConstructionOptions="EditorConstructionOptions" @ref="_editor"/>
                 </ChildContent>
@@ -134,7 +142,7 @@
         </RadzenStack>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea Placeholder="Output" @bind-Value=@output Cols="60" Rows="40" id="output"/>
+        <RadzenTextArea Placeholder="Output" @bind-Value="@output" Cols="60" Rows="40" id="output"/>
     </RadzenColumn>
 </RadzenRow>
 <script>

@@ -1,9 +1,11 @@
 ﻿using BlazorMonaco.Editor;
 using HtmlAgilityPack;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using Radzen;
+using System.Collections;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -22,19 +24,43 @@ namespace Transformer_.Pages
         [Inject]
         public DialogService DialogService { get; set; }
         StandaloneCodeEditor _editor { get; set; }
-
+        private sealed record UserJs(string Name, string Code);
         #region Fields
 
         public string? Split, Join, BoundAll, BoundEach;
 
         #endregion Fields
-
+        List<UserJs> jsTransforms = [];
+        private string? jsTransform;
         private string input = string.Empty;
         private string output = string.Empty;
         private string userCode = string.Empty;
         private bool working = false, _dynamic;
         private readonly string error = "Input box is empty.";
         private List<Message> messages = [];
+
+        protected override async Task OnInitializedAsync()
+        {
+            try
+            {
+                var filePath = Configuration.GetValue<string>("JsTransformsFile")
+                               ?? throw new ArgumentException("JsTransformsFile config missing");
+                var json = await File.ReadAllTextAsync(filePath);
+                if (string.IsNullOrEmpty(json))
+                {
+                    await using StreamWriter outputFile = new(filePath, false);
+                    await outputFile.WriteLineAsync(JsonConvert.SerializeObject(new List<UserJs>
+                    {
+                        new("//Converter", "output = input.split('\\t').map(x => `${x} = source.${x}`).join(',\\n')")
+                    }));
+                }
+                jsTransforms = JsonConvert.DeserializeObject<UserJs[]>(json)?.ToList()!;
+            }
+            catch (Exception ex)
+            {
+                await DialogService.Alert(ex.StackTrace,ex.Message);
+            }
+        }
 
         private void ShowTooltip(ElementReference elementReference, TooltipOptions options)
         {
@@ -166,91 +192,10 @@ namespace Transformer_.Pages
             }
         }
 
-        private void Int() =>
-            output = string.IsNullOrEmpty(input)
-                ? error
-                : input.Replace("\n", ", ");
-
-        private void StrDouble() =>
-            output = string.IsNullOrEmpty(input)
-                ? error
-                : string.Concat("\"", input.Replace("\n", "\", \""), "\"");
-
-        private void StrSingle() =>
-            output = string.IsNullOrEmpty(input)
-                ? error
-                : string.Concat("'", input.Replace("\n", "', '"), "'");
-
         private void Snippet() =>
             output = string.IsNullOrEmpty(input)
                 ? error
                 : string.Concat("\"", input.Replace("\n", "\",\n\"").Replace("\t", "\\t").Replace("    ", "\\t"), "\"");
-
-        private void MixDouble()
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                output = error;
-                return;
-            }
-            try
-            {
-                var inArray = input.Split("\n");
-
-                if (inArray.Length <= 1)
-                    inArray = input.Split("\t");
-
-                var result = new StringBuilder();
-
-                foreach (var item in inArray)
-                {
-                    result.AppendFormat(item switch
-                    {
-                        var a when int.TryParse(a, out var ignore) => "{0},",
-                        _ => "\"{0}\","
-                    }, item);
-                }
-                result.Length--;
-                output = result.ToString();
-            }
-            catch (Exception ex)
-            {
-                output = ex.Message;
-            }
-        }
-
-        private void MixSingle()
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                output = error;
-                return;
-            }
-            try
-            {
-                var inArray = input.Split("\n");
-
-                if (inArray.Length <= 1)
-                    inArray = input.Split("\t");
-
-                var result = new StringBuilder();
-
-                foreach (var item in inArray)
-                {
-                    result.AppendFormat(item switch
-                    {
-                        var a when int.TryParse(a, out var ignore) || a == "NULL" => "{0},",
-                        _ => "'{0}',"
-                    }, item);
-                }
-                result.Length--;
-                output = result.ToString();
-            }
-            catch (Exception ex)
-            {
-                output = ex.Message;
-            }
-        }
 
         private void Json()
         {
@@ -273,7 +218,7 @@ namespace Transformer_.Pages
                         var b when b.Equals("NULL", StringComparison.OrdinalIgnoreCase) => "\"{0}\":\"\",\n",
                         var c when string.IsNullOrEmpty(c) => "\"{0}\":\"\",\n",
                         _ => "\"{0}\":\"{1}\",\n"
-                    }, Char.ToLowerInvariant(cols[x][0]) + cols[x][1..], values[x]);
+                    }, char.ToLowerInvariant(cols[x][0]) + cols[x][1..], values[x]);
                 }
                 result.Length -= 2;
                 output = $"{{\n{result}\n}}";
@@ -306,7 +251,6 @@ namespace Transformer_.Pages
                             result.Append($"Insufficient arguments.\n\n");
                             break;
                         case 2:
-                            properties[0] = properties[0].Replace("LOB", "LineOfBusiness").Replace("ID", "Id").Replace("Num", "Number").Replace("Agt", "Agent").Replace("Trans", "Transaction");
                             result.Append(properties[1] switch
                             {
                                 var a when a.Contains("int", StringComparison.OrdinalIgnoreCase) =>
@@ -383,28 +327,6 @@ namespace Transformer_.Pages
                 foreach (var item in items)
                 {
                     result.Append($"builder.Property(p => p.{item}).HasColumnName(\"{item}\");\n\n");
-                }
-                output = result.ToString();
-            }
-            catch (Exception ex)
-            {
-                output = ex.Message;
-            }
-        }
-
-        private void Box()
-        {
-            try
-            {
-                var items = input.Split('\t');
-
-                if (items.Length <= 1)
-                    items = input.Split('\n');
-
-                var result = new StringBuilder();
-                foreach (var item in items)
-                {
-                    result.Append($"[{item}],\n\t");
                 }
                 output = result.ToString();
             }
@@ -505,6 +427,56 @@ namespace Transformer_.Pages
             catch (Exception ex)
             {
                 output = ex.Message;
+            }
+        }
+
+        private async Task NextJs()
+        {
+            try
+            {
+                userCode = await _editor.GetValue();
+                if (string.IsNullOrEmpty(userCode))
+                    userCode = $"{jsTransforms[0].Name}\n{jsTransforms[0].Code}";
+                else
+                {
+                    var index = jsTransforms.FindIndex(x => x.Name == userCode.Split("\n")[0]);
+                    if (index < jsTransforms.Count - 1)
+                    {
+                        userCode = $"{jsTransforms[index + 1].Name}\n{jsTransforms[index + 1].Code}";
+                    }
+                    else
+                        userCode = $"{jsTransforms[0].Name}\n{jsTransforms[0].Code}";
+                }
+                await _editor.SetValue(userCode);
+            }
+            catch (Exception ex)
+            {
+                await DialogService.Alert(ex.StackTrace,ex.Message);
+            }
+        }
+
+        private async Task PreviousJs()
+        {
+            try
+            {
+                userCode = await _editor.GetValue();
+                if (string.IsNullOrEmpty(userCode))
+                    userCode = $"{jsTransforms[0].Name}\n{jsTransforms[0].Code}";
+                else
+                {
+                    var index = jsTransforms.FindIndex(x => x.Name == userCode.Split("\n")[0]);
+                    if (index > 0)
+                    {
+                        userCode = $"{jsTransforms[index - 1].Name}\n{jsTransforms[index - 1].Code}";
+                    }
+                    else
+                        userCode = $"{jsTransforms[^1].Name}\n{jsTransforms[^1].Code}";
+                }
+                await _editor.SetValue(userCode);
+            }
+            catch (Exception ex)
+            {
+                await DialogService.Alert(ex.StackTrace,ex.Message);
             }
         }
 
