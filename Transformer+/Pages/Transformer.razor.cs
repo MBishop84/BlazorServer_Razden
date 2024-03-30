@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using BlazorMonaco.Editor;
+using HtmlAgilityPack;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
@@ -18,7 +19,16 @@ namespace Transformer_.Pages
         private TooltipService tooltipService { get; set; }
         [Inject]
         private IJSRuntime JsRuntime { get; set; }
-        string? _split, _join, _boundAll, _boundEach;
+        [Inject]
+        public DialogService DialogService { get; set; }
+        StandaloneCodeEditor _editor { get; set; }
+
+        #region Fields
+
+        public string? Split, Join, BoundAll, BoundEach;
+
+        #endregion Fields
+
         private string input = string.Empty;
         private string output = string.Empty;
         private string userCode = string.Empty;
@@ -97,6 +107,62 @@ namespace Transformer_.Pages
             catch (Exception ex)
             {
                 return ex.Message;
+            }
+        }
+
+        private async Task Transform()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(BoundAll) && BoundAll.Split('.').Length != 2)
+                {
+                    throw new ArgumentException("Bound-All must be separated by a period(.)");
+                }
+                if (!string.IsNullOrEmpty(BoundEach) && BoundEach.Split('.').Length != 2)
+                {
+                    throw new ArgumentException("Bound-Each must be separated by a period(.)");
+                }
+                var split = Split?.Replace("\\n", "\n").Replace("\\t", "\t") ?? string.Empty;
+                var join = Join?.Replace("\\n", "\n").Replace("\\t", "\t") ?? string.Empty;
+
+                var frontBracket = string.IsNullOrEmpty(BoundAll)
+                    ? string.Empty
+                    : BoundAll.Split('.')[0];
+                var endBracket = string.IsNullOrEmpty(BoundAll)
+                    ? string.Empty
+                    : BoundAll.Split('.')[1];
+                var frontParentheses = string.IsNullOrEmpty(BoundEach)
+                    ? string.Empty
+                    : BoundEach.Split('.')[0];
+                var endParentheses = string.IsNullOrEmpty(BoundEach)
+                    ? string.Empty
+                    : BoundEach.Split('.')[1];
+
+                output = $"{frontBracket}{string.Join(join, input?.Split(split).Select(x =>
+                {
+                    return _dynamic switch
+                    {
+                        true => int.TryParse(x, out var i) || x.Equals("null", StringComparison.OrdinalIgnoreCase)
+                            ? $"{x}" : $"{frontParentheses}{x}{endParentheses}",
+                        false => $"{frontParentheses}{x}{endParentheses}"
+                    };
+                }) ?? [])}{endBracket}";
+            }
+            catch (Exception ex)
+            {
+                await DialogService.Alert(ex.StackTrace, ex.Message);
+            }
+        }
+
+        private void ClearField(string field)
+        {
+            try
+            {
+                GetType().GetField(field)?.SetValue(this, default);
+            }
+            catch (Exception ex)
+            {
+                output = ex.Message;
             }
         }
 
@@ -429,15 +495,11 @@ namespace Transformer_.Pages
         {
             try
             {
+                userCode = await _editor.GetValue();
                 var userBox = "const input = document.getElementById('input').value;\nlet output = '';\n[***]\ndocument.getElementById('output').value = output;";
                 if (!string.IsNullOrEmpty(userCode))
                 {
-                    HtmlDocument htmlDoc = new();
-                    htmlDoc.LoadHtml(userCode);
-                    var superClean = htmlDoc.DocumentNode.InnerText
-                        .Replace("&gt;", ">").Replace("&lt;", "<").Replace("&nbsp;", " ");
-                    Console.WriteLine(superClean);
-                    await JsRuntime.InvokeAsync<string>("runUserScript", userBox.Replace("[***]", superClean));
+                    await JsRuntime.InvokeAsync<string>("runUserScript", userBox.Replace("[***]", userCode));
                 }
             }
             catch (Exception ex)
@@ -446,7 +508,20 @@ namespace Transformer_.Pages
             }
         }
 
-        private void StarterCode() =>             
-            userCode = @"output = input.split('\n').map(x => x.length >= 5 ? `Hello ${x}` : `GoodBye ${x}`).join(',\n');";
+        private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        {
+            return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Language = "javascript",
+                Value = userCode,
+                Theme = "vs-dark",
+                TabSize = 2,
+                DetectIndentation = true,
+                TrimAutoWhitespace = true,
+                WordBasedSuggestionsOnlySameLanguage = true,
+                StablePeek = true
+            };
+        }
     }
 }

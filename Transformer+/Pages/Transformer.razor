@@ -4,139 +4,137 @@
 <PageTitle>Transformer</PageTitle>
 <Animation AnimationName="@AnimationName.zoomIn">
     <RadzenStack AlignItems="AlignItems.Center">
-        <img src="/images/Bishop_Logo.png" style="width: 40%" alt="Transformer"/>
+        <img src="/images/Transformer.png" style="width: 35%" alt="Logo"/>
     </RadzenStack>
 </Animation>
 <hr />
 <RadzenRow JustifyContent="JustifyContent.SpaceEvenly" AlignItems="AlignItems.Normal" Gap="0rem">
     <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea Placeholder="Input" @bind-Value="@input" Cols="60" Rows="35" id="input"/>
+        <RadzenTextArea Placeholder="Input" @bind-Value="@input" Cols="60" Rows="40" id="input"/>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
-            <RadzenFormField Text="Split" Variant="Variant.Outlined">
-                <RadzenRadioButtonList @bind-Value="@_split" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
-                    <Items>
-                        <RadzenRadioButtonListItem Text="," Value=@(",")/>
-                        <RadzenRadioButtonListItem Text="\n" Value=@(@"\n")/>
-                        <RadzenRadioButtonListItem Text="\t" Value=@(@"\t")/>
-                    </Items>
-                </RadzenRadioButtonList>
-            </RadzenFormField>
-            <RadzenFormField Text="Join" Variant="Variant.Outlined">
-                <RadzenRadioButtonList @bind-Value="@_join" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
-                    <Items>
-                        <RadzenRadioButtonListItem Text="," Value=@(",")/>
-                        <RadzenRadioButtonListItem Text="\n" Value=@(@"\n")/>
-                        <RadzenRadioButtonListItem Text="\t" Value=@(@"\t")/>
-                    </Items>
-                </RadzenRadioButtonList>
-            </RadzenFormField>
-            <RadzenFormField Text="Bound-All" Variant="Variant.Outlined">
-                <RadzenRadioButtonList @bind-Value="@_boundAll" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
-                    <Items>
-                        <RadzenRadioButtonListItem Text="(.)" Value=@("(.)")/>
-                        <RadzenRadioButtonListItem Text="[.]" Value=@("[.]")/>
-                        <RadzenRadioButtonListItem Text="{.}" Value=@("{.}")/>
-                    </Items>
-                </RadzenRadioButtonList>
-            </RadzenFormField>
-            <RadzenFormField Text="Bound-Each" Variant="Variant.Outlined">
-                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                    <RadzenRadioButtonList @bind-Value="@_boundEach" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
-                        <Items>
-                            <RadzenRadioButtonListItem Text="@("\".\"")" Value=@("\".\"")/>
-                            <RadzenRadioButtonListItem Text="'.'" Value=@("'.'")/>
-                        </Items>
-                    </RadzenRadioButtonList>
-                    <RadzenLabel Component="Dynamic" Text="Dynamic" Style="font-size: 0.75em"/>
-                    <RadzenCheckBox @bind-Value="@_dynamic" TValue="bool" Name="Dynamic"/>
-                </RadzenStack>
-            </RadzenFormField>
-        </RadzenStack>
-        <br/>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" Gap="10px">
-            <RadzenTextBox @bind-Value="@_split" TValue="string?" Placeholder="User Split" Style="width: 90%"/>
-            <RadzenTextBox @bind-Value="@_join" TValue="string?" Placeholder="User Join" Style="width: 90%"/>
-            <RadzenTextBox @bind-Value="@_boundAll" TValue="string?" Placeholder="User B-All" Style="width: 90%"/>
-            <RadzenTextBox @bind-Value="@_boundEach" TValue="string?" Placeholder="User B-Each" Style="width: 90%"/>
-        </RadzenStack>
-        <br/>
-
-        <RadzenCard Variant="Variant.Filled">
-            @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
-            {
-                                <RadzenButton 
-                                    Variant="Variant.Outlined" 
-                                    Shade="Shade.Darker" 
-                                    Click="@AskGpt" 
-                                    ButtonStyle="ButtonStyle.Secondary" 
-                                    Style="width:100%" 
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="10px">
+            <RadzenPanel AllowCollapse="true">
+                <HeaderTemplate>
+                    <RadzenText TextStyle="TextStyle.Overline" Text="Simple Variables"/>
+                </HeaderTemplate>
+                <ChildContent>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="10px">
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@(_ => ClearField("Split"))" Text="Clear" ButtonStyle="ButtonStyle.Info" Style="width: 24%"/>
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@(_ => ClearField("Join"))" Text="Clear" ButtonStyle="ButtonStyle.Info" Style="width: 24%"/>
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@(_ => ClearField("BoundAll"))" Text="Clear" ButtonStyle="ButtonStyle.Info" Style="width: 24%"/>
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@(_ => ClearField("BoundEach"))" Text="Clear" ButtonStyle="ButtonStyle.Info" Style="width: 24%"/>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenFormField Text="Split" Variant="Variant.Outlined" Style="width: 24%">
+                            <RadzenRadioButtonList @bind-Value="@Split" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
+                                <Items>
+                                    <RadzenRadioButtonListItem Text="," Value=@(",")/>
+                                    <RadzenRadioButtonListItem Text="\n" Value=@(@"\n")/>
+                                    <RadzenRadioButtonListItem Text="\t" Value=@(@"\t")/>
+                                </Items>
+                            </RadzenRadioButtonList>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Join" Variant="Variant.Outlined" Style="width: 24%">
+                            <RadzenRadioButtonList @bind-Value="@Join" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
+                                <Items>
+                                    <RadzenRadioButtonListItem Text="," Value=@(",")/>
+                                    <RadzenRadioButtonListItem Text="\n" Value=@(@"\n")/>
+                                    <RadzenRadioButtonListItem Text="\t" Value=@(@"\t")/>
+                                </Items>
+                            </RadzenRadioButtonList>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Bound-All" Variant="Variant.Outlined" Style="width: 24%">
+                            <RadzenRadioButtonList @bind-Value="@BoundAll" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
+                                <Items>
+                                    <RadzenRadioButtonListItem Text="(.)" Value=@("(.)")/>
+                                    <RadzenRadioButtonListItem Text="[.]" Value=@("[.]")/>
+                                    <RadzenRadioButtonListItem Text="{.}" Value=@("{.}")/>
+                                </Items>
+                            </RadzenRadioButtonList>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Bound-Each" Variant="Variant.Outlined" Style="width: 24%">
+                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0">
+                                <RadzenRadioButtonList @bind-Value="@BoundEach" TValue="string" Orientation="Orientation.Vertical" class="rz-mx-6">
+                                    <Items>
+                                        <RadzenRadioButtonListItem Text="@("\".\"")" Value=@("\".\"")/>
+                                        <RadzenRadioButtonListItem Text="'.'" Value=@("'.'")/>
+                                    </Items>
+                                </RadzenRadioButtonList>
+                                <RadzenLabel Component="Dynamic" Text="Dynamic" Style="font-size: 0.75em"/>
+                                <RadzenCheckBox @bind-Value="@_dynamic" TValue="bool" Name="Dynamic"/>
+                            </RadzenStack>
+                        </RadzenFormField>
+                    </RadzenStack>
+                    <br/>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" Gap="10px">
+                        <RadzenTextBox @bind-Value="@Split" TValue="string?" Placeholder="User Split" Style="width: 90%"/>
+                        <RadzenTextBox @bind-Value="@Join" TValue="string?" Placeholder="User Join" Style="width: 90%"/>
+                        <RadzenTextBox @bind-Value="@BoundAll" TValue="string?" Placeholder="User B-All" Style="width: 90%"/>
+                        <RadzenTextBox @bind-Value="@BoundEach" TValue="string?" Placeholder="User B-Each" Style="width: 90%"/>
+                    </RadzenStack>
+                    <br/>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="10px">
+                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Transform" Text="Transform" ButtonStyle="ButtonStyle.Secondary" Style="width: 29%"/>
+                    </RadzenStack>
+                </ChildContent>
+            </RadzenPanel>
+            <RadzenPanel AllowCollapse="true" Collapsed="true">
+                <HeaderTemplate>
+                    <RadzenText TextStyle="TextStyle.Overline" Text="Button Array"/>
+                </HeaderTemplate>
+                <ChildContent>
+                    <RadzenCard Variant="Variant.Filled">
+                        @if (!string.IsNullOrEmpty(Configuration["GPTKey"]))
+                        {
+                                <RadzenButton
+                                    Variant="Variant.Outlined"
+                                    Shade="Shade.Darker"
+                                    Click="@AskGpt"
+                                    ButtonStyle="ButtonStyle.Secondary"
+                                    Style="width: 100%"
                                     Disabled="working">
-                                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                                    <img src="/favicon.ico" style="width: 10%" alt="Transformer"/>
                                     <span class="rz-button-text rz-mx-9">Ask ChatGPT</span>
-                                    <img src="/favicon.ico" style="width:10%" alt="Transformer"/>
+                                    <img src="/favicon.ico" style="width: 10%" alt="Transformer"/>
                                 </RadzenButton>
-            }
-            <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                <RadzenButton 
-                    Variant="Variant.Outlined" Shade="Shade.Darker"  Click="@Int" Text="Int" ButtonStyle="ButtonStyle.Primary" Style="width:29%" 
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\n2\n3 -> 1,2,3", Position = TooltipPosition.Left }) )"/>
-                <RadzenButton 
-                    Variant="Variant.Outlined" Shade="Shade.Darker" Click="@StrDouble" Text="Str" ButtonStyle="ButtonStyle.Primary" Style="width:29%" 
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A\nB\nC -> \"A\",\"B\",\"C\"", Position = TooltipPosition.Top }))"/>
-                <RadzenButton 
-                    Variant="Variant.Outlined" Shade="Shade.Darker" Click="@MixDouble" Text="Mix" ButtonStyle="ButtonStyle.Primary" Style="width:29%" 
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\nB\n3 -> 1,\"B\",3", Position = TooltipPosition.Right }))"/>
-            </RadzenStack>
-            <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                <RadzenButton 
-                    Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Entity" Text="Entity" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ 
-                            Text = "NAME\tTYPE\tNULL? -> public TYPE? NAME { get; set; }", 
-                            Position = TooltipPosition.Left }))"/>
-                <RadzenButton 
-                    Variant="Variant.Outlined" Shade="Shade.Darker" Click="@StrSingle" Text="'Str'" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A\nB\nC -> 'A','B','C'", Position = TooltipPosition.Top }))"/>
-                <RadzenButton 
-                    Variant="Variant.Outlined" Shade="Shade.Darker" Click="@MixSingle" Text="'Mix'" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "1\nB\n3 -> 1,'B',3", Position = TooltipPosition.Right }))"/>
-            </RadzenStack>
-            <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                <RadzenButton 
-                    Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Snippet" Text="Snippet" ButtonStyle="ButtonStyle.Primary" Style="width:29%"
-                    MouseEnter="@(args => ShowTooltip(args, new TooltipOptions(){ Text = "A B C -> \"A B C\",", Position = TooltipPosition.Left }))"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Json" Text="Json" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Conversion" Text="Converter" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-            </RadzenStack>
-            <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Box" Text="[...]" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JsonToClass" Text="Json->Class" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JsonToXML" Text="Json->XML" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-            </RadzenStack>
-            <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Schema" Text="Schema" ButtonStyle="ButtonStyle.Primary" Style="width:29%"/>
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild"  Icon="local_fire_department" ButtonStyle="ButtonStyle.Danger" Style="width:29%" />
-                <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width:29%"/>
-            </RadzenStack>
-        </RadzenCard>
-        <hr />
-        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript"  Text="< JavaScript >" ButtonStyle="ButtonStyle.Success" Style="width:29%" />
-        <br />
-        <RadzenHtmlEditor @bind-Value="@userCode" style="height: 300px;" Execute="@StarterCode">
-            <RadzenHtmlEditorCustomTool CommandName="Starter Code Example" Icon="code" Title="Starter Code Example" />
-            <RadzenHtmlEditorUndo />
-            <RadzenHtmlEditorRedo />
-            <RadzenHtmlEditorAlignLeft />
-            <RadzenHtmlEditorIndent />
-            <RadzenHtmlEditorOutdent />
-            <RadzenHtmlEditorColor />
-            <RadzenHtmlEditorFontName />
-            <RadzenHtmlEditorFontSize />
-        </RadzenHtmlEditor>
+                        }
+                        <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                            <RadzenButton
+                                Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Snippet" Text="Snippet" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"
+                                MouseEnter="@(args => ShowTooltip(args, new TooltipOptions() { Text = "A B C -> \"A B C\",", Position = TooltipPosition.Left }))"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Json" Text="Json" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Conversion" Text="Converter" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+                        </RadzenStack>
+                        <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                            <RadzenButton
+                                Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Entity" Text="Entity" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"
+                                MouseEnter="@(args => ShowTooltip(args, new TooltipOptions() { Text = "NAME\tTYPE\tNULL? -> public TYPE? NAME { get; set; }", Position = TooltipPosition.Left }))"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JsonToClass" Text="Json->Class" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JsonToXML" Text="Json->XML" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+                        </RadzenStack>
+                        <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Schema" Text="Schema" ButtonStyle="ButtonStyle.Primary" Style="width: 29%"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Wild" Icon="local_fire_department" ButtonStyle="ButtonStyle.Danger" Style="width: 29%"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@Clear" Text="Clear" ButtonStyle="ButtonStyle.Warning" Style="width: 29%"/>
+                        </RadzenStack>
+                    </RadzenCard>
+                </ChildContent>
+            </RadzenPanel>
+            <RadzenPanel AllowCollapse="true" Collapsed="true">
+                <HeaderTemplate>
+                    <RadzenText TextStyle="TextStyle.Overline" Text="Javascript"/>
+                </HeaderTemplate>
+                <ChildContent>
+                    <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript" Text="< Execute >" ButtonStyle="ButtonStyle.Success" />
+                    <br/>
+                    <StandaloneCodeEditor Id="user_code" ConstructionOptions="EditorConstructionOptions" @ref="_editor"/>
+                </ChildContent>
+            </RadzenPanel>
+        </RadzenStack>
     </RadzenColumn>
     <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea Placeholder="Output" @bind-Value=@output Cols="60" Rows="35" id="output"/>
+        <RadzenTextArea Placeholder="Output" @bind-Value=@output Cols="60" Rows="40" id="output"/>
     </RadzenColumn>
 </RadzenRow>
 <script>

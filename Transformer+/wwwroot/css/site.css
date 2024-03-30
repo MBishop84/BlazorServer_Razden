@@ -62,3 +62,11 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+.monaco-editor-container {
+    height: 28vh;
+}
+
+.rz-panel {
+    width: 100%;
+}
