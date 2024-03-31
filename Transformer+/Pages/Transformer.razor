@@ -128,7 +128,7 @@
                 </HeaderTemplate>
                 <ChildContent>
                     <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                             <RadzenFormField Text="SelectCode" Variant="Variant.Outlined" Style="width: 29%">
                                 <RadzenDropDownDataGrid Data="@jsTransforms"
                                                         TValue="string"
@@ -143,7 +143,7 @@
                             <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Icon="save" 
                                           Click="@SaveJs" Text="Save" ButtonStyle="ButtonStyle.Secondary" Style="width: 29%"/>
                         </RadzenStack>
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
                             <RadzenFormField Text="SelectTheme" Variant="Variant.Outlined" Style="width: 29%">
                                 <RadzenDropDownDataGrid Data="@MonacoThemes"
                                                         TValue="string"

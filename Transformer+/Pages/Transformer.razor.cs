@@ -69,7 +69,10 @@ namespace Transformer_.Pages
         {
             try
             {
-                await Global.SetTheme(JsRuntime, $"wwwroot/themes/{theme}.json");
+                await Global.DefineTheme(JsRuntime, "thisTheme", 
+                    JsonConvert.DeserializeObject<StandaloneThemeData>(
+                        await File.ReadAllTextAsync($"wwwroot/themes/{theme}.json")));
+                await Global.SetTheme(JsRuntime, "thisTheme");
             }
             catch (Exception ex)
             {
