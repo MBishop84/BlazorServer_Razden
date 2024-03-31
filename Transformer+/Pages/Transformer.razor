@@ -13,8 +13,8 @@
     <RadzenColumn class="rz-text-align-center">
         <RadzenTextArea Placeholder="Input" @bind-Value="@input" Cols="60" Rows="40" id="input"/>
     </RadzenColumn>
-    <RadzenColumn class="rz-text-align-center">
-        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="10px">
+    <RadzenColumn>
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Center" Gap="10px">
             <RadzenPanel AllowCollapse="true">
                 <HeaderTemplate>
                     <RadzenText TextStyle="TextStyle.Overline" Text="Simple Variables"/>
@@ -127,13 +127,34 @@
                     <RadzenText TextStyle="TextStyle.Overline" Text="Javascript"/>
                 </HeaderTemplate>
                 <ChildContent>
-                    <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                        <RadzenFormField Text="RadzenDropDownDataGrid" Variant="Variant.Outlined" Style="width: 29%">
-                            <RadzenDropDownDataGrid Data="@jsTransforms" Value="@jsTransform" Change="@(args => jsTransform = $"{args}")"/>
-                        </RadzenFormField>
-                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@PreviousJs" Text="<Prev" ButtonStyle="ButtonStyle.Success" Style="width: 15%"/>
-                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@NextJs" Text="Next>" ButtonStyle="ButtonStyle.Success" Style="width: 15%"/>
-                        <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Click="@JavaScript" Text="Execute" ButtonStyle="ButtonStyle.Success" Style="width: 29%"/>
+                    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                            <RadzenFormField Text="SelectCode" Variant="Variant.Outlined" Style="width: 29%">
+                                <RadzenDropDownDataGrid Data="@jsTransforms"
+                                                        TValue="string"
+                                                        TextProperty="Name" 
+                                                        ValueProperty="Code" 
+                                                        Change="@(async x => await UpdateUserCode($"{x}"))"/>
+                            </RadzenFormField>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" 
+                                          Click="@PreviousJs" Text="<Prev" ButtonStyle="ButtonStyle.Info" Style="width: 15%"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" 
+                                          Click="@NextJs" Text="Next>" ButtonStyle="ButtonStyle.Info" Style="width: 15%"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Icon="save" 
+                                          Click="@SaveJs" Text="Save" ButtonStyle="ButtonStyle.Secondary" Style="width: 29%"/>
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
+                            <RadzenFormField Text="SelectTheme" Variant="Variant.Outlined" Style="width: 29%">
+                                <RadzenDropDownDataGrid Data="@MonacoThemes"
+                                                        TValue="string"
+                                                        Value="@monacoTheme" 
+                                                        Change="@(async x => await ChangeTheme($"{x}"))"/>
+                            </RadzenFormField>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Icon="delete"
+                                          Click="@DeleteJs" Text="Delete" ButtonStyle="ButtonStyle.Danger"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker"
+                                          Click="@JavaScript" Text="Execute" ButtonStyle="ButtonStyle.Success"/>
+                        </RadzenStack>
                     </RadzenStack>
                     <br/>
                     <StandaloneCodeEditor Id="user_code" ConstructionOptions="EditorConstructionOptions" @ref="_editor"/>

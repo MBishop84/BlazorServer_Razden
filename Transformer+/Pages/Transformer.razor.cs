@@ -30,31 +30,46 @@ namespace Transformer_.Pages
         public string? Split, Join, BoundAll, BoundEach;
 
         #endregion Fields
+
+        private List<string> MonacoThemes;
         List<UserJs> jsTransforms = [];
-        private string? jsTransform;
-        private string input = string.Empty;
-        private string output = string.Empty;
-        private string userCode = string.Empty;
+        private string input = string.Empty, output = string.Empty, userCode = string.Empty, jsFilePath, monacoTheme;
         private bool working = false, _dynamic;
         private readonly string error = "Input box is empty.";
         private List<Message> messages = [];
 
         protected override async Task OnInitializedAsync()
         {
+            await base.OnInitializedAsync();
             try
             {
-                var filePath = Configuration.GetValue<string>("JsTransformsFile")
-                               ?? throw new ArgumentException("JsTransformsFile config missing");
-                var json = await File.ReadAllTextAsync(filePath);
+                MonacoThemes = Directory.GetFiles("wwwroot/themes/", "*.json")
+                    .Select(x => Path.GetFileNameWithoutExtension(x)).ToList();
+                jsFilePath = Configuration.GetValue<string>("JsTransformsFile")
+                             ?? throw new ArgumentException("JsTransformsFile config missing");
+                var json = await File.ReadAllTextAsync(jsFilePath);
                 if (string.IsNullOrEmpty(json))
                 {
-                    await using StreamWriter outputFile = new(filePath, false);
+                    await using StreamWriter outputFile = new(jsFilePath, false);
                     await outputFile.WriteLineAsync(JsonConvert.SerializeObject(new List<UserJs>
                     {
                         new("//Converter", "output = input.split('\\t').map(x => `${x} = source.${x}`).join(',\\n')")
                     }));
                 }
                 jsTransforms = JsonConvert.DeserializeObject<UserJs[]>(json)?.ToList()!;
+            }
+            catch (Exception ex)
+            {
+                await DialogService.Alert(ex.StackTrace,ex.Message);
+                output = ex.Message;
+            }
+        }
+
+        private async Task ChangeTheme(string theme)
+        {
+            try
+            {
+                await Global.SetTheme(JsRuntime, $"wwwroot/themes/{theme}.json");
             }
             catch (Exception ex)
             {
@@ -429,6 +444,80 @@ namespace Transformer_.Pages
                 output = ex.Message;
             }
         }
+
+        private async Task SaveJs()
+        {
+            try
+            {
+                userCode = await _editor.GetValue();
+                if (string.IsNullOrEmpty(userCode))
+                    throw new ArgumentException("No code to save.");
+                var userSnippet = userCode.Split("\n");
+                if (userSnippet.Length < 2)
+                    throw new ArgumentException("Please include a name for your script.");
+
+                if (!userSnippet[0].StartsWith("//"))
+                    userSnippet[0] = $"//{userSnippet[0]}";
+
+                if (userSnippet.Length > 2)
+                    userSnippet[1] = string.Join("\n", userSnippet[1..]);
+
+                if (jsTransforms.Exists(x => x.Name == userSnippet[0]))
+                    jsTransforms.Remove(jsTransforms.First(x => x.Name == userSnippet[0]));
+
+                jsTransforms.Add(new UserJs(userSnippet[0], userSnippet[1]));
+                await using StreamWriter outputFile = new(jsFilePath, false);
+                await outputFile.WriteLineAsync(JsonConvert.SerializeObject(jsTransforms));
+                await DialogService.Alert("Your Transform has been saved!","Success!");
+            }
+            catch (Exception ex)
+            {
+                await DialogService.Alert(ex.StackTrace,ex.Message);
+            }
+        }
+
+        private async Task DeleteJs()
+        {
+            try
+            {
+                userCode = await _editor.GetValue();
+                if (string.IsNullOrEmpty(userCode))
+                {
+                    await DialogService.Alert("Please select a transform to delete.", "Error");
+                    return;
+                }
+                var userSnippet = userCode.Split("\n");
+
+                if (!userSnippet[0].StartsWith("//"))
+                    userSnippet[0] = $"//{userSnippet[0]}";
+
+                if (!jsTransforms.Exists(x => x.Name == userSnippet[0]))
+                {
+                    await DialogService.Alert("No user transform found with that name!", "Error");
+                    return;
+                }
+
+                var dialog = await DialogService.Confirm(
+                    $"Are you sure you want to permanently delete User Transform {userSnippet[0].Replace("//", "")}?",
+                    "Confirmation");
+                if (dialog != null && (bool)dialog)
+                {
+                    jsTransforms.Remove(jsTransforms.First(x => x.Name == userSnippet[0]));
+
+                    await using StreamWriter outputFile = new(jsFilePath, false);
+                    await outputFile.WriteAsync(JsonConvert.SerializeObject(jsTransforms));
+                    await DialogService.Alert("Your Transform has been deleted!", "Success!");
+                    await _editor.SetValue(string.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                await DialogService.Alert(ex.StackTrace,ex.Message);
+            }
+        }
+
+        private Task UpdateUserCode(string userSnippet) =>
+            _editor.SetValue(userSnippet);
 
         private async Task NextJs()
         {
