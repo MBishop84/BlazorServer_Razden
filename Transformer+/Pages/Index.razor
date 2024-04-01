@@ -48,6 +48,12 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
 
         content = await GetContent();
         if (content != null)
@@ -55,6 +61,8 @@
             quote = content.text;
             author = content.author.name;
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task<Content?> GetContent()

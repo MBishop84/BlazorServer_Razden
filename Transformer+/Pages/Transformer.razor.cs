@@ -1,11 +1,8 @@
 ﻿using BlazorMonaco.Editor;
-using HtmlAgilityPack;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Configuration;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using Radzen;
-using System.Collections;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -31,6 +28,7 @@ namespace Transformer_.Pages
 
         #endregion Fields
 
+        private readonly string themeStorageKey = "monacoTheme";
         private List<string> MonacoThemes;
         List<UserJs> jsTransforms = [];
         private string input = string.Empty, output = string.Empty, userCode = string.Empty, jsFilePath, monacoTheme;
@@ -45,6 +43,7 @@ namespace Transformer_.Pages
             {
                 MonacoThemes = Directory.GetFiles("wwwroot/themes/", "*.json")
                     .Select(x => Path.GetFileNameWithoutExtension(x)).ToList();
+                MonacoThemes.AddRange(new[] { "vs-dark", "vs-light" });
                 jsFilePath = Configuration.GetValue<string>("JsTransformsFile")
                              ?? throw new ArgumentException("JsTransformsFile config missing");
                 var json = await File.ReadAllTextAsync(jsFilePath);
@@ -53,30 +52,57 @@ namespace Transformer_.Pages
                     await using StreamWriter outputFile = new(jsFilePath, false);
                     await outputFile.WriteLineAsync(JsonConvert.SerializeObject(new List<UserJs>
                     {
-                        new("//Converter", "output = input.split('\\t').map(x => `${x} = source.${x}`).join(',\\n')")
+                        new("//Converter", @"output = input.split('\t').map(x => `${x} = source.${x}`).join(',\n')")
                     }));
                 }
                 jsTransforms = JsonConvert.DeserializeObject<UserJs[]>(json)?.ToList()!;
+                
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace,ex.Message);
+                await DialogService.Alert(ex.StackTrace, ex.Message);
                 output = ex.Message;
             }
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (!firstRender)
+                return;
+
+            var theme = await JsRuntime.InvokeAsync<string>("localStorage.getItem", themeStorageKey);
+            if (string.IsNullOrEmpty(theme))
+            {
+                await ChangeTheme("vs-dark");
+            }
+            else
+            {
+                await ChangeTheme(theme);
+            }
+
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task ChangeTheme(string theme)
         {
             try
             {
-                await Global.DefineTheme(JsRuntime, "thisTheme", 
-                    JsonConvert.DeserializeObject<StandaloneThemeData>(
-                        await File.ReadAllTextAsync($"wwwroot/themes/{theme}.json")));
-                await Global.SetTheme(JsRuntime, "thisTheme");
+                var myTheme = theme;
+                monacoTheme = theme;
+                if (!new[] { "vs-dark", "vs-light" }.Contains(theme))
+                {
+                    await Global.DefineTheme(JsRuntime, "thisTheme",
+                        JsonConvert.DeserializeObject<StandaloneThemeData>(
+                            await File.ReadAllTextAsync($"wwwroot/themes/{theme}.json")));
+                    myTheme = "thisTheme";
+                }
+
+                await Global.SetTheme(JsRuntime, myTheme);
+                await JsRuntime.InvokeVoidAsync("localStorage.setItem", themeStorageKey, theme);
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace,ex.Message);
+                await DialogService.Alert(ex.StackTrace, ex.Message);
             }
         }
 
@@ -471,11 +497,11 @@ namespace Transformer_.Pages
                 jsTransforms.Add(new UserJs(userSnippet[0], userSnippet[1]));
                 await using StreamWriter outputFile = new(jsFilePath, false);
                 await outputFile.WriteLineAsync(JsonConvert.SerializeObject(jsTransforms));
-                await DialogService.Alert("Your Transform has been saved!","Success!");
+                await DialogService.Alert("Your Transform has been saved!", "Success!");
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace,ex.Message);
+                await DialogService.Alert(ex.StackTrace, ex.Message);
             }
         }
 
@@ -515,12 +541,16 @@ namespace Transformer_.Pages
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace,ex.Message);
+                await DialogService.Alert(ex.StackTrace, ex.Message);
             }
         }
 
-        private Task UpdateUserCode(string userSnippet) =>
-            _editor.SetValue(userSnippet);
+        private Task UpdateUserCode(string jsTransform)
+        {
+            var fullString = jsTransforms.Where(x => x.Code == jsTransform)
+                .Select(y => $"{y.Name}\n{y.Code}").FirstOrDefault();
+            return _editor.SetValue(fullString);
+        }
 
         private async Task NextJs()
         {
@@ -543,7 +573,7 @@ namespace Transformer_.Pages
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace,ex.Message);
+                await DialogService.Alert(ex.StackTrace, ex.Message);
             }
         }
 
@@ -568,7 +598,7 @@ namespace Transformer_.Pages
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace,ex.Message);
+                await DialogService.Alert(ex.StackTrace, ex.Message);
             }
         }
 
@@ -579,7 +609,6 @@ namespace Transformer_.Pages
                 AutomaticLayout = true,
                 Language = "javascript",
                 Value = userCode,
-                Theme = "vs-dark",
                 TabSize = 2,
                 DetectIndentation = true,
                 TrimAutoWhitespace = true,

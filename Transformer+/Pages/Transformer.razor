@@ -1,6 +1,5 @@
 ﻿@page "/transformer"
 @using Transformer_.Data.Animations;
-@using System.Collections
 
 <PageTitle>Transformer</PageTitle>
 <Animation AnimationName="@AnimationName.zoomIn">
@@ -9,9 +8,9 @@
     </RadzenStack>
 </Animation>
 <hr />
-<RadzenRow JustifyContent="JustifyContent.SpaceEvenly" AlignItems="AlignItems.Normal" Gap="0rem">
-    <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea Placeholder="Input" @bind-Value="@input" Cols="60" Rows="40" id="input"/>
+<RadzenRow JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Start" Gap="1rem">
+    <RadzenColumn>
+        <RadzenTextArea Placeholder="Input" @bind-Value="@input" id="input" class="w-100" Rows="40"/>
     </RadzenColumn>
     <RadzenColumn>
         <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.Center" Gap="10px">
@@ -127,15 +126,15 @@
                     <RadzenText TextStyle="TextStyle.Overline" Text="Javascript"/>
                 </HeaderTemplate>
                 <ChildContent>
-                    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceAround" Gap="1rem">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-                            <RadzenFormField Text="SelectCode" Variant="Variant.Outlined" Style="width: 29%">
-                                <RadzenDropDownDataGrid Data="@jsTransforms"
-                                                        TValue="string"
-                                                        TextProperty="Name" 
-                                                        ValueProperty="Code" 
-                                                        Change="@(async x => await UpdateUserCode($"{x}"))"/>
-                            </RadzenFormField>
+                    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" class="w-100">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" class="w-100">
+                            <RadzenDropDown Data="@jsTransforms"
+                                            Placeholder="Saved Transforms"
+                                            Style="width: 29%"
+                                            TValue="UserJs"
+                                            TextProperty="Name"
+                                            ValueProperty="Code"
+                                            Change="@(async x => await UpdateUserCode($"{x}"))" />
                             <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" 
                                           Click="@PreviousJs" Text="<Prev" ButtonStyle="ButtonStyle.Info" Style="width: 15%"/>
                             <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" 
@@ -143,16 +142,15 @@
                             <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Icon="save" 
                                           Click="@SaveJs" Text="Save" ButtonStyle="ButtonStyle.Secondary" Style="width: 29%"/>
                         </RadzenStack>
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
-                            <RadzenFormField Text="SelectTheme" Variant="Variant.Outlined" Style="width: 29%">
-                                <RadzenDropDownDataGrid Data="@MonacoThemes"
-                                                        TValue="string"
-                                                        Value="@monacoTheme" 
-                                                        Change="@(async x => await ChangeTheme($"{x}"))"/>
-                            </RadzenFormField>
-                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Icon="delete"
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween" class="w-100">
+                            <RadzenDropDown Data="@MonacoThemes"
+                                            Style="width: 29%"
+                                            TValue="string"
+                                            Value="@monacoTheme" 
+                                            Change="@(async x => await ChangeTheme($"{x}"))"/>
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Icon="delete" Style="width: 29%"
                                           Click="@DeleteJs" Text="Delete" ButtonStyle="ButtonStyle.Danger"/>
-                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker"
+                            <RadzenButton Variant="Variant.Outlined" Shade="Shade.Darker" Style="width: 29%"
                                           Click="@JavaScript" Text="Execute" ButtonStyle="ButtonStyle.Success"/>
                         </RadzenStack>
                     </RadzenStack>
@@ -162,8 +160,8 @@
             </RadzenPanel>
         </RadzenStack>
     </RadzenColumn>
-    <RadzenColumn class="rz-text-align-center">
-        <RadzenTextArea Placeholder="Output" @bind-Value="@output" Cols="60" Rows="40" id="output"/>
+    <RadzenColumn>
+        <RadzenTextArea Placeholder="Output" @bind-Value="@output" class="w-100" Rows="40" id="output"/>
     </RadzenColumn>
 </RadzenRow>
 <script>
