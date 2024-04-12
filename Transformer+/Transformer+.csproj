@@ -6,6 +6,8 @@
     <RootNamespace>Transformer_</RootNamespace>
     <ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
     <PackageIcon>Autobots.png</PackageIcon>
+    <UserSecretsId>4a44d68e-cd97-494f-8bdf-9000a17ef2b9</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="wwwroot\images\Transformer.png" />
@@ -20,6 +22,7 @@
     <PackageReference Include="BlazorMonaco" Version="3.2.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.59" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
     <PackageReference Include="Radzen.Blazor" Version="4.16.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.CodeDom" Version="8.0.0" />
