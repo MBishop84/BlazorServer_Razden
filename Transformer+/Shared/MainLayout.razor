@@ -1,17 +1,31 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>Transformer+</PageTitle>
-
-<div class="page">
-    <div class="sidebar">
+<RadzenLayout>
+    <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenSidebarToggle Click="@(() => _sidebar1Expanded = !_sidebar1Expanded)" />
+            <RadzenLabel Text="Transformer Plus" />
+        </RadzenStack>
+    </RadzenHeader>
+    <RadzenSidebar @bind-Expanded="@_sidebar1Expanded">
         <NavMenu />
-    </div>
+    </RadzenSidebar>
+    <RadzenBody>
+        @Body
+    </RadzenBody>
+    <RadzenFooter>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Style="height: 20px">
+            <RadzenLink Path="https://www.radzen.com" Text="Go to url" target="_blank">
+                <RadzenImage Style="height: 20px"
+                    Path="https://www.radzen.com/assets/radzen-logo-top-b2d6e9dcacf7d344bbab515b8748c5f4d702c6c5bfc349bd9ff9003016a3a6ee.svg" />
+            </RadzenLink>
+            <RadzenLink Path="https://github.com/MBishop84/BlazorServer_Razden.git" Text="This Repo" Icon="code" target="_blank">
+            </RadzenLink>
+        </RadzenStack>
+    </RadzenFooter>
+</RadzenLayout>
 
-    <main>
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
-<RadzenComponents/>
+@code {
+    bool _sidebar1Expanded = true;
+}
 

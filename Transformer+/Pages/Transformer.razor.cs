@@ -3,38 +3,39 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using Radzen;
+using System.Collections.Immutable;
 using System.Globalization;
-using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Transformer_.Pages
 {
     public partial class Transformer
     {
-        [Inject]
-        private IConfiguration Configuration { get; set; }
-        [Inject]
-        private TooltipService tooltipService { get; set; }
-        [Inject]
-        private IJSRuntime JsRuntime { get; set; }
-        [Inject]
-        public DialogService DialogService { get; set; }
-        StandaloneCodeEditor _editor { get; set; }
-        private sealed record UserJs(string Name, string Code);
-        #region Fields
+        #region Injected Services
 
-        public string? Split, Join, BoundAll, BoundEach;
+        [Inject]
+        private IJSRuntime JS { get; init; }
+        [Inject]
+        private DialogService DialogService { get; init; }
+        [Inject]
+        private IConfiguration Configuration { get; init; }
 
-        #endregion Fields
+        #endregion
 
-        private readonly string themeStorageKey = "monacoTheme";
-        private List<string> MonacoThemes;
-        List<UserJs> jsTransforms = [];
-        private string input = string.Empty, output = string.Empty, userCode = string.Empty, jsFilePath, monacoTheme;
-        private bool working = false, _dynamic;
-        private readonly string error = "Input box is empty.";
-        private List<Message> messages = [];
+        #region Feilds
+        private record JsTransform(int Id, string AddedBy, string Name, string Code);
+        private StandaloneCodeEditor _editor { get; set; }
+        private List<string> MonacoThemes = [];
+        private List<JsTransform> JsTransforms = [];
+        private int _height = 1000;
+        private bool _dynamic, _sort;
+        public string? Input, Output, Split, Join, BoundAll, BoundEach, MonacoTheme, JsFilePath;
+        private string? _entry;
+
+        #endregion
 
         protected override async Task OnInitializedAsync()
         {
@@ -44,24 +45,24 @@ namespace Transformer_.Pages
                 MonacoThemes = Directory.GetFiles("wwwroot/themes/", "*.json")
                     .Select(x => Path.GetFileNameWithoutExtension(x)).ToList();
                 MonacoThemes.AddRange(new[] { "vs-dark", "vs-light" });
-                jsFilePath = Configuration.GetValue<string>("JsTransformsFile")
+                JsFilePath = Configuration.GetValue<string>("JsTransformsFile")
                              ?? throw new ArgumentException("JsTransformsFile config missing");
-                var json = await File.ReadAllTextAsync(jsFilePath);
+                var json = await File.ReadAllTextAsync(JsFilePath);
                 if (string.IsNullOrEmpty(json))
                 {
-                    await using StreamWriter outputFile = new(jsFilePath, false);
-                    await outputFile.WriteLineAsync(JsonConvert.SerializeObject(new List<UserJs>
+                    await using StreamWriter outputFile = new(JsFilePath, false);
+                    await outputFile.WriteLineAsync(JsonConvert.SerializeObject(new List<JsTransform>
                     {
-                        new("//Converter", @"output = input.split('\t').map(x => `${x} = source.${x}`).join(',\n')")
+                        new(0,"Unknown", "//Converter", @"output = input.split('\t').map(x => `${x} = source.${x}`).join(',\n')")
                     }));
                 }
-                jsTransforms = JsonConvert.DeserializeObject<UserJs[]>(json)?.ToList()!;
-                
+                JsTransforms = JsonConvert.DeserializeObject<JsTransform[]>(json)?.ToList()!;
+                DialogService.OnClose += DialogClose;
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace, ex.Message);
-                output = ex.Message;
+                Input = ex.Message;
+                Output = ex.Message;
             }
         }
 
@@ -70,7 +71,8 @@ namespace Transformer_.Pages
             if (!firstRender)
                 return;
 
-            var theme = await JsRuntime.InvokeAsync<string>("localStorage.getItem", themeStorageKey);
+            _height = await JS.InvokeAsync<int>("GetHeight");
+            var theme = await JS.InvokeAsync<string>("localStorage.getItem", "MonacoTheme");
             if (string.IsNullOrEmpty(theme))
             {
                 await ChangeTheme("vs-dark");
@@ -83,100 +85,35 @@ namespace Transformer_.Pages
             await InvokeAsync(StateHasChanged);
         }
 
+        private void DialogClose(dynamic entry)
+        {
+            if (entry == null)
+                return;
+
+            _entry = $"{entry}";
+            StateHasChanged();
+        }
+
         private async Task ChangeTheme(string theme)
         {
+            MonacoTheme = theme;
             try
             {
                 var myTheme = theme;
-                monacoTheme = theme;
                 if (!new[] { "vs-dark", "vs-light" }.Contains(theme))
                 {
-                    await Global.DefineTheme(JsRuntime, "thisTheme",
+                    await Global.DefineTheme(JS, "thisTheme",
                         JsonConvert.DeserializeObject<StandaloneThemeData>(
                             await File.ReadAllTextAsync($"wwwroot/themes/{theme}.json")));
                     myTheme = "thisTheme";
                 }
 
-                await Global.SetTheme(JsRuntime, myTheme);
-                await JsRuntime.InvokeVoidAsync("localStorage.setItem", themeStorageKey, theme);
+                await Global.SetTheme(JS, myTheme);
+                await JS.InvokeVoidAsync("localStorage.setItem", "MonacoTheme", theme);
             }
             catch (Exception ex)
             {
                 await DialogService.Alert(ex.StackTrace, ex.Message);
-            }
-        }
-
-        private void ShowTooltip(ElementReference elementReference, TooltipOptions options)
-        {
-            options.Duration = 5000;
-            tooltipService.Open(elementReference, options.Text, options);
-        }
-
-        private sealed class Message
-        {
-            public string? role { get; set; }
-            public string? content { get; set; }
-        }
-
-        private void Clear()
-        {
-            input = string.Empty;
-            output = string.Empty;
-        }
-
-        private async Task AskGpt()
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                output = error;
-                return;
-            }
-            else if (string.IsNullOrEmpty(Configuration["GPTKey"]))
-            {
-                output = "You are missing the api key.";
-                return;
-            }
-            output = "Please wait...";
-            working = true;
-            try
-            {
-                messages.Add(new Message() { role = "user", content = input });
-                output = await CallOpenAi() ?? error;
-                messages.Add(new Message() { role = "assistant", content = output });
-            }
-            catch (Exception ex)
-            {
-                output = ex.Message;
-            }
-            finally
-            {
-                working = false;
-            }
-        }
-
-        private async Task<string?> CallOpenAi()
-        {
-            try
-            {
-                using var client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Configuration["GPTKey"]);
-                var request = new
-                {
-                    model = "gpt-3.5-turbo",
-                    messages = messages.ToArray(),
-                };
-                var response = await client.PostAsync(
-                    @"https://api.openai.com/v1/chat/completions",
-                    new StringContent(JsonConvert.SerializeObject(request),
-                    Encoding.UTF8, "application/json"));
-
-                var result = await response.Content.ReadAsStringAsync();
-                dynamic gptResponse = JsonConvert.DeserializeObject(result);
-                return gptResponse?.choices[0].message.content;
-            }
-            catch (Exception ex)
-            {
-                return ex.Message;
             }
         }
 
@@ -208,50 +145,54 @@ namespace Transformer_.Pages
                     ? string.Empty
                     : BoundEach.Split('.')[1];
 
-                output = $"{frontBracket}{string.Join(join, input?.Split(split).Select(x =>
+                var outputArray = Input?.Split(split).Select(x =>
                 {
                     return _dynamic switch
                     {
                         true => int.TryParse(x, out var i) || x.Equals("null", StringComparison.OrdinalIgnoreCase)
-                            ? $"{x}" : $"{frontParentheses}{x}{endParentheses}",
+                            ? $"{x}"
+                            : $"{frontParentheses}{x}{endParentheses}",
                         false => $"{frontParentheses}{x}{endParentheses}"
                     };
-                }) ?? [])}{endBracket}";
+                }) ?? [];
+
+                if (_sort)
+                {
+                    outputArray = outputArray.OrderBy(x => x).ToImmutableList();
+                }
+
+                Output = $"{frontBracket}{string.Join(join, outputArray)}{endBracket}";
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace, ex.Message);
+                await DialogService.OpenAsync<CustomDialog>(
+                    "Transform Error",
+                        new Dictionary<string, object>
+                        {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
-        private void ClearField(string field)
+        private void ClearField(string field) =>
+            GetType().GetField(field)?.SetValue(this, default);
+
+        private async Task RowToJson()
         {
             try
             {
-                GetType().GetField(field)?.SetValue(this, default);
-            }
-            catch (Exception ex)
-            {
-                output = ex.Message;
-            }
-        }
-
-        private void Snippet() =>
-            output = string.IsNullOrEmpty(input)
-                ? error
-                : string.Concat("\"", input.Replace("\n", "\",\n\"").Replace("\t", "\\t").Replace("    ", "\\t"), "\"");
-
-        private void Json()
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                output = error;
-                return;
-            }
-            try
-            {
-                var cols = input.Split("\n")[0].Split("\t");
-                var values = input.Split("\n")[1].Split("\t");
+                if (string.IsNullOrEmpty(Input))
+                {
+                    throw new ArgumentException("Input is empty.");
+                }
+                var cols = Input.Split("\n")[0].Split("\t");
+                var values = Input.Split("\n")[1].Split("\t");
                 var result = new StringBuilder();
 
                 for (var x = 0; x < cols.Length; x++)
@@ -265,35 +206,44 @@ namespace Transformer_.Pages
                     }, char.ToLowerInvariant(cols[x][0]) + cols[x][1..], values[x]);
                 }
                 result.Length -= 2;
-                output = $"{{\n{result}\n}}";
+                Output = $"{{\n{result}\n}}";
             }
             catch (Exception ex)
             {
-                output = ex.Message;
+                await DialogService.OpenAsync<CustomDialog>(
+                    "RowToJson Error",
+                    new Dictionary<string, object>
+                    {
+                        { "Type", Enums.DialogTypes.Error },
+                        { "Message", $"{ex.Message}\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
-        private void Entity()
+        private async Task ClassFromQuery()
         {
-            if (string.IsNullOrEmpty(input))
-            {
-                output = error;
-                return;
-            }
             try
             {
-                var lines = input.Split("\n");
+                if (string.IsNullOrEmpty(Input))
+                {
+                    throw new ArgumentException("Input is Empty");
+                }
+                var lines = Input.Split("\n");
                 var result = new StringBuilder();
 
                 foreach (var line in lines)
                 {
                     var properties = line.Split("\t");
-                    result.AppendFormat("///<summary>\n/// Gets/Sets the {0}.\n///</summary>\n", properties[0]);
+                    result.Append($"///<summary>\n/// Gets/Sets the {properties[0]}.\n///</summary>\n");
                     switch (properties.Length)
                     {
                         case 1:
-                            result.Append($"Insufficient arguments.\n\n");
-                            break;
+                            throw new ArgumentException("Insufficient arguments.\n\n");
                         case 2:
                             result.Append(properties[1] switch
                             {
@@ -309,8 +259,7 @@ namespace Transformer_.Pages
                             });
                             break;
                         case 3:
-                            string isNullable = properties[2].Equals("YES", StringComparison.OrdinalIgnoreCase) ? "?" : "";
-                            properties[0] = properties[0].Replace("LOB", "LineOfBusiness").Replace("ID", "Id").Replace("Num", "Number").Replace("Agt", "Agent").Replace("Trans", "Transaction");
+                            var isNullable = properties[2].Equals("YES", StringComparison.OrdinalIgnoreCase) ? "?" : "";
                             result.Append(properties[1] switch
                             {
                                 var a when a.Contains("int", StringComparison.OrdinalIgnoreCase) =>
@@ -324,136 +273,229 @@ namespace Transformer_.Pages
                                 _ => $"public string {properties[0]} {{ get; set; }}\n\n"
                             });
                             break;
-                        default:
-                            break;
                     }
                 }
-                output = result.ToString();
+                Output = result.ToString();
             }
             catch (Exception ex)
             {
-                output = ex.Message;
-            }
-        }
-
-        private void Conversion()
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                output = error;
-                return;
-            }
-            try
-            {
-                var lines = input.Split("\n");
-                var result = new StringBuilder();
-
-                foreach (var line in lines)
-                {
-                    var param = line.Replace("LOB", "LineOfBusiness").Replace("ID", "Id").Replace("Num", "Number").Replace("Agt", "Agent").Replace("Trans", "Transaction");
-                    result.AppendLine($"{param} = source.{param},");
-                }
-
-                output = result.ToString();
-            }
-            catch (Exception ex)
-            {
-                output = ex.ToString();
-            }
-        }
-
-        private void Schema()
-        {
-            try
-            {
-                var items = input.Split('\n');
-                var result = new StringBuilder();
-                foreach (var item in items)
-                {
-                    result.Append($"builder.Property(p => p.{item}).HasColumnName(\"{item}\");\n\n");
-                }
-                output = result.ToString();
-            }
-            catch (Exception ex)
-            {
-                output = ex.Message;
-            }
-        }
-
-        private void JsonToClass()
-        {
-            try
-            {
-                dynamic? jsonObject = JsonConvert.DeserializeObject($"{{{input}}}");
-                if (jsonObject != null)
-                {
-                    var result = new StringBuilder();
-                    foreach (var i in jsonObject)
+                await DialogService.OpenAsync<CustomDialog>(
+                    "ClassFromQuery Error",
+                    new Dictionary<string, object>
                     {
-                        result.AppendFormat("///<summary>\n/// Gets/Sets the {0}.\n///</summary>\n", i.Name);
-                        result.Append($"{i.Value}" switch
-                        {
-                            var a when int.TryParse(a, out int itemInt) =>
-                                $"public int {i.Name} {{ get; set; }}\n\n",
-                            var b when DateTime.TryParse(b, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime itemDate) =>
-                                $"public DateTime? {i.Name} {{ get; set; }}\n\n",
-                            var c when bool.TryParse(c, out bool itemBool) =>
-                                $"public bool {i.Name} {{ get; set; }}\n\n",
-                            _ => $"public string {i.Name} {{ get; set; }} = string.Empty;\n\n"
-                        });
-                    }
-                    output = result.ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                output = ex.Message;
+                { "Type", Enums.DialogTypes.ClassFromQuery },
+                { "Message", $"{ex.Message}\n\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
-        private void JsonToXML()
+        private async Task JsonToClass()
         {
             try
             {
+                if (string.IsNullOrEmpty(Input))
+                    throw new ArgumentException("Input is Empty");
+                if (!Input.StartsWith("{"))
+                    Input = $"{{{Input}}}";
+                dynamic? jsonObject = JsonConvert.DeserializeObject(Input);
+                if (jsonObject == null) return;
+                var result = new StringBuilder();
+                List<string> nestedItems = [];
+                foreach (var i in jsonObject)
+                {
+                    var nested = false;
+                    foreach (var x in i)
+                    {
+                        if (!x.HasValues) continue;
+                        var objectName = $"{i.Name}";
+                        result.AppendFormat(
+                            "///<summary>\n/// Gets/Sets the {0}.\n///</summary>\npublic {1} {0} {{ get; set; }}",
+                            i.Name,
+                            $"{char.ToUpper(objectName[0])}{objectName[1..]}");
+                        nestedItems.Add($"{char.ToUpper(objectName[0])}{objectName[1..]}");
+                        nested = true;
+                    }
+
+                    if (nested)
+                    {
+                        result.Append("}\n");
+                        continue;
+                    }
+                    result.AppendFormat("///<summary>\n/// Gets/Sets the {0}.\n///</summary>\n", i.Name);
+                    result.Append($"{i.Value}" switch
+                    {
+                        var a when int.TryParse(a, out var itemInt) =>
+                            $"public int {i.Name} {{ get; set; }}\n\n",
+                        var b when DateTime.TryParse(b, CultureInfo.InvariantCulture, DateTimeStyles.None, out var itemDate) =>
+                            $"public DateTime? {i.Name} {{ get; set; }}\n\n",
+                        var c when bool.TryParse(c, out var iBool) =>
+                            $"public bool {i.Name} {{ get; set; }}\n\n",
+                        _ => $"public string {i.Name} {{ get; set; }} = string.Empty;\n\n"
+                    });
+                }
+                Output = result.ToString();
+                if (nestedItems.Any())
+                    throw new ArgumentException(
+                        $"Nested objects are not fully supported.\n\n{string.Join("\n\t", nestedItems)}\n\nHave been added as objects.");
+            }
+            catch (Exception ex)
+            {
+                await DialogService.OpenAsync<CustomDialog>(
+                    "JsonToClass Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
+            }
+        }
+
+        private async Task JsonToXML()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Input))
+                    throw new ArgumentException("Input is Empty");
+                if (!Input.StartsWith("{"))
+                    Input = $"{{{Input}}}";
+
                 var doc = JsonConvert.DeserializeXmlNode(
-                    @"{'DefaultRoot':{" + $"{input}}}}}"
-                    );
+                    "{\"DefaultRoot\":" + $"{Input}}}"
+                );
                 var sw = new StringWriter();
                 var writer = new XmlTextWriter(sw)
                 {
                     Formatting = System.Xml.Formatting.Indented
                 };
                 doc?.WriteContentTo(writer);
-                output = sw.ToString();
+                Output = sw.ToString();
             }
             catch (Exception ex)
             {
-                output = ex.Message;
+                await DialogService.OpenAsync<CustomDialog>(
+                    "JsonToXML Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
-        private void Wild()
+        private async Task XmlToClass()
         {
             try
             {
-                //output = string.Join("", input.Split('\n').Select(x =>
-                //{
-                //    var thisItem = x.Split(':');
-                //    return thisItem[0].Contains('?')
-                //        ? $"{x.Replace(";", "")} | null;\n"
-                //        : $"{thisItem[0]}?: {thisItem[1].Replace(";", "")} | null;\n";
-                //}));
+                if (string.IsNullOrEmpty(Input))
+                    throw new ArgumentException("Input is Empty");
 
-                output = string.Join("", input.Split('\n').Select(x =>
+                if (Input.Contains("&lt;") || Input.Contains("&gt;"))
+                    Input = Input.Replace("&lt;", "<").Replace("&gt;", ">");
+
+                var xml = new XmlDocument();
+                xml.LoadXml(Input);
+                var result = new StringBuilder();
+                var xmlRoot = xml.DocumentElement;
+
+                if (xmlRoot == null)
+                    throw new ArgumentException("XML must have a root element");
+
+                result.Append(
+                    $"public class {xmlRoot.Name}\n{{\n");
+
+                foreach (XmlNode node in xmlRoot.ChildNodes)
                 {
-                    var y = x.Split('\t');
-                    y[1] = y[1].Equals("varchar") ? "varchar(50)" : y[1];
-                    return $"[{y[0]}] {y[1]},\n\t";
-                }));
+                    if (node.NodeType == XmlNodeType.Comment) continue;
+                    if (string.IsNullOrEmpty(node.InnerText) || node.ChildNodes.Count > 1)
+                    {
+                        result.AppendFormat(
+                            "\t///<summary>\n\t/// Gets/Sets the {0}.\n\t///</summary>\n\tpublic {1} {0} {{ get; set; }}\n\n",
+                            node.Name,
+                            $"{char.ToUpper(node.Name[0])}{node.Name[1..]}");
+                    }
+                    else
+                    {
+                        result.AppendFormat(
+                            "\t///<summary>\n\t/// Gets/Sets the {0}.\n\t///</summary>\n\tpublic {1} {0} {{ get; set; }} = {2};\n\n",
+                            node.Name,
+                            node.InnerText switch
+                            {
+                                var a when int.TryParse(a, out var itemInt) => "int",
+                                var b when DateTime.TryParse(b, CultureInfo.InvariantCulture, DateTimeStyles.None, out var itemDate) => "DateTime",
+                                var c when bool.TryParse(c, out var iBool) => "bool",
+                                _ => "string"
+                            },
+                            node.InnerText switch
+                            {
+                                var a when int.TryParse(a, out var itemInt) => "0",
+                                var b when DateTime.TryParse(b, CultureInfo.InvariantCulture, DateTimeStyles.None, out var itemDate) => "DateTime.MinValue",
+                                var c when bool.TryParse(c, out var iBool) => "false",
+                                _ => "string.Empty"
+                            });
+                    }
+                }
+                result.Append("}");
+                Output = result.ToString();
             }
             catch (Exception ex)
             {
-                output = ex.Message;
+                var message = $"{ex.Message}\n{ex.StackTrace}";
+                if (ex.Message.Contains("multiple root elements"))
+                    message = $"{ex.Message}\n\nPlease add an outer root element.";
+                await DialogService.OpenAsync<CustomDialog>(
+                    "XmlToClass Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.XmlToClass },
+                { "Message", message }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
+            }
+        }
+
+        private async Task XmlToJson()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Input))
+                    throw new ArgumentException("Input is Empty");
+                var doc = new XmlDocument();
+                doc.LoadXml(Input);
+                Output = JsonConvert.SerializeXmlNode(doc, Formatting.Indented);
+            }
+            catch (Exception ex)
+            {
+                await DialogService.OpenAsync<CustomDialog>(
+                    "XmlToJson Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
@@ -461,16 +503,40 @@ namespace Transformer_.Pages
         {
             try
             {
-                userCode = await _editor.GetValue();
-                var userBox = "const input = document.getElementById('input').value;\nlet output = '';\n[***]\ndocument.getElementById('output').value = output;";
-                if (!string.IsNullOrEmpty(userCode))
+                if (string.IsNullOrEmpty(Input))
+                    throw new ArgumentException("Input is Empty");
+
+                var userCode = await _editor.GetValue();
+
+                if (string.IsNullOrEmpty(userCode))
+                    throw new ArgumentException("Please enter or choose a function.");
+                if (!userCode.Contains("output ="))
+                    throw new ArgumentException("Please assign a value to output");
+                if (!userCode.Contains("= input"))
+                    throw new ArgumentException("You must use the input.");
+
+                const string userBox = "const input = document.getElementById('input').value;\nlet output = '';\n[***]\ndocument.getElementById('output').value = output;";
+                var task = JS.InvokeAsync<string>("runUserScript", userBox.Replace("[***]", userCode)).AsTask();
+                if (await Task.WhenAny(task, Task.Delay(3)) != task)
                 {
-                    await JsRuntime.InvokeAsync<string>("runUserScript", userBox.Replace("[***]", userCode));
+                    throw new ArgumentException("JavaScript Timeout. Please simplify your code.");
                 }
+                await task;
             }
             catch (Exception ex)
             {
-                output = ex.Message;
+                await DialogService.OpenAsync<CustomDialog>(
+                    "JavaScript Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
@@ -478,30 +544,69 @@ namespace Transformer_.Pages
         {
             try
             {
-                userCode = await _editor.GetValue();
+                var userCode = await _editor.GetValue();
                 if (string.IsNullOrEmpty(userCode))
-                    throw new ArgumentException("No code to save.");
-                var userSnippet = userCode.Split("\n");
-                if (userSnippet.Length < 2)
-                    throw new ArgumentException("Please include a name for your script.");
+                    throw new ArgumentException("Input is Empty");
+                var name = userCode.Split("\n")[0];
+                if (!await DialogService.Confirm(
+                    $"Is {name} the name for your transform?",
+                    "Confirmation",
+                    new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" }) ?? false)
+                {
+                    await DialogService.OpenAsync<CustomDialog>(
+                        "Enter Transform Name",
+                        new Dictionary<string, object>
+                        {
+                     { "Type", Enums.DialogTypes.Text },
+                     { "Message", "Please name your transform." }
+                        },
+                        new DialogOptions() { Width = "max-content", Height = "200px" });
+                    if (string.IsNullOrEmpty(_entry))
+                        throw new ArgumentException("Transform Name is Empty");
+                    name = _entry.StartsWith("//") ? _entry : $"//{_entry}";
+                    _entry = null;
+                }
+                else { userCode = userCode.Replace($"{name}\n", ""); }
 
-                if (!userSnippet[0].StartsWith("//"))
-                    userSnippet[0] = $"//{userSnippet[0]}";
+                await DialogService.OpenAsync<CustomDialog>(
+                    "Enter Name",
+                    new Dictionary<string, object>
+                    {
+                 { "Type", Enums.DialogTypes.Text },
+                 { "Message", "Please enter your name to take ownership of this transform." }
+                    },
+                    new DialogOptions() { Width = "max-content", Height = "200px" });
 
-                if (userSnippet.Length > 2)
-                    userSnippet[1] = string.Join("\n", userSnippet[1..]);
+                if (string.IsNullOrEmpty(_entry))
+                    throw new ArgumentException("Name is Empty");
 
-                if (jsTransforms.Exists(x => x.Name == userSnippet[0]))
-                    jsTransforms.Remove(jsTransforms.First(x => x.Name == userSnippet[0]));
+                var newTransform = new JsTransform(
+                    JsTransforms.Count,
+                    _entry,
+                    name,
+                    userCode);
 
-                jsTransforms.Add(new UserJs(userSnippet[0], userSnippet[1]));
-                await using StreamWriter outputFile = new(jsFilePath, false);
-                await outputFile.WriteLineAsync(JsonConvert.SerializeObject(jsTransforms));
-                await DialogService.Alert("Your Transform has been saved!", "Success!");
+                JsTransforms.Add(newTransform);
+                await File.WriteAllTextAsync(JsFilePath, JsonConvert.SerializeObject(JsTransforms, Formatting.Indented));
+                await InvokeAsync(StateHasChanged);
+                await DialogService.Alert(
+                    JsonConvert.SerializeObject(newTransform, Formatting.Indented),
+                    "Success");
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace, ex.Message);
+                await DialogService.OpenAsync<CustomDialog>(
+                "SaveJs Error",
+                new Dictionary<string, object>
+                {
+             { "Type", Enums.DialogTypes.Error },
+             { "Message", $"{ex.Message}\n\n{ex.StackTrace}" }
+                },
+                new DialogOptions()
+                {
+                    Width = "max-content",
+                    Height = "50vh"
+                });
             }
         }
 
@@ -509,45 +614,64 @@ namespace Transformer_.Pages
         {
             try
             {
-                userCode = await _editor.GetValue();
-                if (string.IsNullOrEmpty(userCode))
+                var userCode = await _editor.GetValue();
+                var name = userCode.Split("\n")[0];
+                var jsTransform = JsTransforms.FirstOrDefault(x => x.Name == name);
+                var deleteMessage = $"Your key does not match, but {name} has been deleted from this instance.";
+                if (jsTransform == null)
+                    throw new ArgumentException("No code found to delete.");
+
+                if (await DialogService.Confirm(
+                    $"Are you sure you want to delete {name}?",
+                    "Final Confirmation",
+                    new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" }) ?? false)
                 {
-                    await DialogService.Alert("Please select a transform to delete.", "Error");
-                    return;
-                }
-                var userSnippet = userCode.Split("\n");
+                    await DialogService.OpenAsync<CustomDialog>("Password", new Dictionary<string, object>
+                    {
+                        { "Type", Enums.DialogTypes.Password },
+                        { "Message", "Please enter your key to permanently delete this code." }
+                    }, new DialogOptions() { Width = "max-content", Height = "200px" });
 
-                if (!userSnippet[0].StartsWith("//"))
-                    userSnippet[0] = $"//{userSnippet[0]}";
+                    if (string.IsNullOrEmpty(_entry))
+                        throw new ArgumentException("Password is Empty");
 
-                if (!jsTransforms.Exists(x => x.Name == userSnippet[0]))
-                {
-                    await DialogService.Alert("No user transform found with that name!", "Error");
-                    return;
-                }
-
-                var dialog = await DialogService.Confirm(
-                    $"Are you sure you want to permanently delete User Transform {userSnippet[0].Replace("//", "")}?",
-                    "Confirmation");
-                if (dialog != null && (bool)dialog)
-                {
-                    jsTransforms.Remove(jsTransforms.First(x => x.Name == userSnippet[0]));
-
-                    await using StreamWriter outputFile = new(jsFilePath, false);
-                    await outputFile.WriteAsync(JsonConvert.SerializeObject(jsTransforms));
-                    await DialogService.Alert("Your Transform has been deleted!", "Success!");
+                    using var hash = SHA256.Create();
+                    if (Configuration.GetValue<string>("DeleteKey")
+                        !.Equals(Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(_entry)))))
+                    {
+                        JsTransforms.Remove(jsTransform);
+                        await File.WriteAllTextAsync(JsFilePath, JsonConvert.SerializeObject(JsTransforms, Formatting.Indented));
+                        deleteMessage = $"{name} has been permanently deleted.";
+                    }
+                    else
+                    {
+                        JsTransforms.Remove(jsTransform);
+                    }
                     await _editor.SetValue(string.Empty);
+                    await InvokeAsync(StateHasChanged);
+                    await DialogService.Alert(deleteMessage, "Success!");
                 }
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace, ex.Message);
+                await DialogService.OpenAsync<CustomDialog>(
+                    "DeleteJs Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
         private Task UpdateUserCode(string jsTransform)
         {
-            var fullString = jsTransforms.Where(x => x.Code == jsTransform)
+            var fullString = JsTransforms.Where(x => x.Code == jsTransform)
                 .Select(y => $"{y.Name}\n{y.Code}").FirstOrDefault();
             return _editor.SetValue(fullString);
         }
@@ -556,24 +680,32 @@ namespace Transformer_.Pages
         {
             try
             {
-                userCode = await _editor.GetValue();
+                var userCode = await _editor.GetValue();
                 if (string.IsNullOrEmpty(userCode))
-                    userCode = $"{jsTransforms[0].Name}\n{jsTransforms[0].Code}";
+                    userCode = $"{JsTransforms[0].Name}\n{JsTransforms[0].Code}";
                 else
                 {
-                    var index = jsTransforms.FindIndex(x => x.Name == userCode.Split("\n")[0]);
-                    if (index < jsTransforms.Count - 1)
-                    {
-                        userCode = $"{jsTransforms[index + 1].Name}\n{jsTransforms[index + 1].Code}";
-                    }
-                    else
-                        userCode = $"{jsTransforms[0].Name}\n{jsTransforms[0].Code}";
+                    var index = JsTransforms.FindIndex(x => x.Name == userCode.Split("\n")[0]);
+                    userCode = index < JsTransforms.Count - 1
+                        ? $"{JsTransforms[index + 1].Name}\n{JsTransforms[index + 1].Code}"
+                        : $"{JsTransforms[0].Name}\n{JsTransforms[0].Code}";
                 }
                 await _editor.SetValue(userCode);
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace, ex.Message);
+                await DialogService.OpenAsync<CustomDialog>(
+                    "NextJs Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
@@ -581,24 +713,35 @@ namespace Transformer_.Pages
         {
             try
             {
-                userCode = await _editor.GetValue();
+                var userCode = await _editor.GetValue();
                 if (string.IsNullOrEmpty(userCode))
-                    userCode = $"{jsTransforms[0].Name}\n{jsTransforms[0].Code}";
+                    userCode = $"{JsTransforms[0].Name}\n{JsTransforms[0].Code}";
                 else
                 {
-                    var index = jsTransforms.FindIndex(x => x.Name == userCode.Split("\n")[0]);
+                    var index = JsTransforms.FindIndex(x => x.Name == userCode.Split("\n")[0]);
                     if (index > 0)
                     {
-                        userCode = $"{jsTransforms[index - 1].Name}\n{jsTransforms[index - 1].Code}";
+                        userCode = $"{JsTransforms[index - 1].Name}\n{JsTransforms[index - 1].Code}";
                     }
                     else
-                        userCode = $"{jsTransforms[^1].Name}\n{jsTransforms[^1].Code}";
+                        userCode = $"{JsTransforms[^1].Name}\n{JsTransforms[^1].Code}";
                 }
                 await _editor.SetValue(userCode);
             }
             catch (Exception ex)
             {
-                await DialogService.Alert(ex.StackTrace, ex.Message);
+                await DialogService.OpenAsync<CustomDialog>(
+                    "PreviousJs Error",
+                    new Dictionary<string, object>
+                    {
+                { "Type", Enums.DialogTypes.Error },
+                { "Message", $"{ex.Message}\n\n{ex.StackTrace}" }
+                    },
+                    new DialogOptions()
+                    {
+                        Width = "max-content",
+                        Height = "50vh"
+                    });
             }
         }
 
@@ -608,7 +751,7 @@ namespace Transformer_.Pages
             {
                 AutomaticLayout = true,
                 Language = "javascript",
-                Value = userCode,
+                Value = "//StarterCode\noutput = input;",
                 TabSize = 2,
                 DetectIndentation = true,
                 TrimAutoWhitespace = true,

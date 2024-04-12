@@ -1,0 +1,78 @@
+﻿@page "/custom_dialog/{Type}/{Message}"
+@inject DialogService DialogService
+
+@switch (Type)
+{
+    case Enums.DialogTypes.Error:
+                <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">
+            @Message
+                </RadzenText>
+        break;
+    case Enums.DialogTypes.ClassFromQuery:
+                <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">@Message</RadzenText>
+                <hr />
+                <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">
+/* Please use the results of this SQL Query and replace 'TableName' with your table */
+
+SELECT
+    ColumnName = col.column_name,
+    ColumnDataType = col.data_type,
+    IS_NULLABLE = col.is_nullable
+FROM INFORMATION_SCHEMA.TABLES tbl
+INNER JOIN INFORMATION_SCHEMA.COLUMNS col
+    ON col.table_name = tbl.table_name
+    AND col.table_schema = tbl.table_schema
+WHERE tbl.table_type = 'base table' and tbl.table_name = 'TableName'
+                </RadzenText>
+        break;
+    case Enums.DialogTypes.XmlToClass:
+                <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">@Message</RadzenText>
+                <hr />
+                <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">
+&lt;!-- This is a very basic converter and works best with a simple xml like this --&gt;
+&lt;Person&gt;
+    &lt;FirstName&gt;Luke&lt;/FirstName&gt;
+    &lt;LastName&gt;Skywalker&lt;/LastName&gt;
+    &lt;DateOfBirth&gt;May 25, 1977&lt;/DateOfBirth&gt;
+    &lt;Age&gt;47&lt;/Age&gt;
+&lt;/Person&gt;
+                </RadzenText>
+        break;
+    case Enums.DialogTypes.Password:
+                <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">@Message</RadzenText>
+                <br />
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                    <RadzenPassword @bind-Value=@entry Placeholder="Enter key..." aria-label="enter key" />
+                    <RadzenButton Click=@(args => DialogService.Close(entry)) Text="Enter" ButtonStyle="ButtonStyle.Primary" />
+                </RadzenStack>
+        break;
+    case Enums.DialogTypes.Text:
+                <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">@Message</RadzenText>
+                <br />
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                    <RadzenTextBox @bind-Value=@entry Placeholder="Enter text..." />
+                    <RadzenButton Click=@(args => DialogService.Close(entry)) Text="Enter" ButtonStyle="ButtonStyle.Primary" />
+                </RadzenStack>
+        break;
+    case null:
+        @if (Message is not null)
+        {
+                        <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">
+                            @Message
+                        </RadzenText>
+        }
+        else
+        {
+                        <RadzenText TextStyle="TextStyle.Body1" TagName="TagName.Pre">
+                            Something went wrong!
+                        </RadzenText>
+        }
+        break;
+}
+
+@code
+{
+    string? entry;
+    [Parameter] public Enums.DialogTypes? Type { get; set; }
+    [Parameter] public string? Message { get; set; }
+}
