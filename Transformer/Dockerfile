@@ -9,17 +9,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Transformer+/Transformer+.csproj", "Transformer+/"]
-RUN dotnet restore "./Transformer+/Transformer+.csproj"
+COPY ["Transformer/Transformer.csproj", "Transformer/"]
+RUN dotnet restore "./Transformer/Transformer.csproj"
 COPY . .
-WORKDIR "/src/Transformer+"
-RUN dotnet build "./Transformer+.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/Transformer"
+RUN dotnet build "./Transformer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Transformer+.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Transformer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Transformer+.dll"]
+ENTRYPOINT ["dotnet", "Transformer.dll"]
