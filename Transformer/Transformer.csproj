@@ -8,6 +8,7 @@
     <PackageIcon>Autobots.png</PackageIcon>
     <UserSecretsId>4a44d68e-cd97-494f-8bdf-9000a17ef2b9</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="wwwroot\images\Transformer.png" />
