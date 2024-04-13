@@ -24,16 +24,16 @@ jobs:
         run: dotnet publish Transformer/Transformer.csproj -c Release -o release
 
       # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
-      - name: Change base-tag in index.html from / to Transformer
-        run: sed -i 's/<base href="\/" \/>/<base href="\/Transformer\/" \/>/g' release/wwwroot/index.html
+      # - name: Change base-tag in index.html from / to Transformer
+        # run: sed -i 's/<base href="\/" \/>/<base href="\/Transformer\/" \/>/g' release/wwwroot/index.html
 
       # copy index.html to 404.html to serve the same file when a file is not found
-      - name: copy index.html to 404.html
-        run: cp release/wwwroot/index.html release/wwwroot/404.html
+      # - name: copy index.html to 404.html
+        # run: cp release/wwwroot/index.html release/wwwroot/404.html
 
       # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
       - name: Add .nojekyll file
-        run: touch release/wwwroot/.nojekyll
+        run: touch release/.nojekyll
 
       # publishes wwwroot directory to GitHub Pages
       - name: Commit wwwroot to GitHub Pages
@@ -41,4 +41,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages # The branch the action should deploy to.
-          folder: release/wwwroot # The folder the action should deploy.
+          folder: release # The folder the action should deploy.
