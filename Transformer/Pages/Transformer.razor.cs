@@ -517,7 +517,7 @@ namespace Transformer_.Pages
 
                 const string userBox = "const input = document.getElementById('input').value;\nlet output = '';\n[***]\ndocument.getElementById('output').value = output;";
                 var task = JS.InvokeAsync<string>("runUserScript", userBox.Replace("[***]", userCode)).AsTask();
-                if (await Task.WhenAny(task, Task.Delay(3)) != task)
+                if (await Task.WhenAny(task, Task.Delay(5)) != task)
                 {
                     throw new ArgumentException("JavaScript Timeout. Please simplify your code.");
                 }
